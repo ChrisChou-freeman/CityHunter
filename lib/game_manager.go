@@ -1,6 +1,6 @@
 package lib
 
-import (
+import(
   "github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -9,4 +9,3 @@ type GameManager interface{
   Draw(scrren *ebiten.Image)
   Dispose()
 }
-

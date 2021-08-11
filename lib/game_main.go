@@ -8,11 +8,6 @@ import (
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type FPoint struct{
-  X float64
-  Y float64
-}
-
 type GameStart struct{
   cloudNumber int
   gameStartLayers [8]*ebiten.Image
@@ -21,7 +16,7 @@ type GameStart struct{
   keyMap *KeyMap
 }
 
-func (g *GameStart) Init(){
+func (g *GameStart) init(){
   g.cloudNumber = 3
   g.layerPosition  = [8]FPoint{{0, 0}, {0, 0}, {0, 230}, {0, 250}, {0, 250}, {0, 0}, {0, 0}, {0, 0}}
   g.LoadContent()
@@ -53,18 +48,6 @@ func (g *GameStart)loadMenu() {
     menu.MenuName = menuName[i]
     menu.Position = image.Point{20, SCRREN_ORI_HEIGHT/2 + 40 + 40 * i}
     g.menuList[i] = menu
-  }
-}
-
-func (g *GameStart)updateCloud(){
-  var count int = 1
-  var layerNumber int  = len(g.gameStartLayers)
-  for i := layerNumber - g.cloudNumber; i< layerNumber; i++{
-    g.layerPosition[i].X += 0.05 * float64(count) 
-    count ++
-    if(g.layerPosition[i].X) >= float64(SCRREN_ORI_WIDTH){
-      g.layerPosition[i].X = -float64(SCRREN_ORI_WIDTH)
-    }
   }
 }
 
@@ -118,6 +101,18 @@ func (g *GameStart)keyEvent(){
   }
 }
 
+func (g *GameStart)updateCloud(){
+  var count int = 1
+  var layerNumber int  = len(g.gameStartLayers)
+  for i := layerNumber - g.cloudNumber; i< layerNumber; i++{
+    g.layerPosition[i].X += 0.05111 * float64(count) 
+    count ++
+    if(g.layerPosition[i].X) >= float64(SCRREN_ORI_WIDTH){
+      g.layerPosition[i].X = -float64(SCRREN_ORI_WIDTH)
+    }
+  }
+}
+
 func (g *GameStart ) Update(){
   g.updateCloud()
   for _, item := range(g.menuList){
@@ -145,6 +140,6 @@ func (g *GameStart) Dispose(){
 
 func NewGameMain()*GameStart{
   var ng *GameStart = new(GameStart)
-  ng.Init()
+  ng.init()
   return ng 
 }

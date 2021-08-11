@@ -5,18 +5,23 @@ import(
   "github.com/hajimehoshi/ebiten/v2"
 )
 
+type Positon struct{
+  X float64
+  Y float64
+}
+
 type Sprite struct{
   Texture *ebiten.Image
-  Position image.Point 
+  Position *Positon 
 }
 
 func(s *Sprite)getRec() image.Rectangle{
   var width, height int = s.Texture.Size()
   var rec *image.Rectangle = new(image.Rectangle)
-  rec.Min.X = s.Position.X
-  rec.Min.Y = s.Position.Y
-  rec.Max.X = s.Position.X + width
-  rec.Max.Y = s.Position.Y + height
+  rec.Min.X = int(s.Position.X) 
+  rec.Min.Y = int(s.Position.Y) 
+  rec.Max.X = int(s.Position.X) + width
+  rec.Max.Y = int(s.Position.Y) + height
   return *rec
 }
 

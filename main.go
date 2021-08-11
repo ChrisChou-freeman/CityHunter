@@ -25,9 +25,15 @@ type Game struct {}
 func (g *Game) Update() error {
   switch lib.GAMEMODE{
     case "GAMEMAIN":
+      if gameManage != nil{
+        gameManage.Dispose()
+      }
       gameManage = lib.NewGameMain() 
       lib.GAMEMODE = ""
     case "DEV":
+      if gameManage != nil{
+        gameManage.Dispose()
+      }
       gameManage = lib.NewLevelEditor() 
       lib.GAMEMODE = ""
     case "EXIT":

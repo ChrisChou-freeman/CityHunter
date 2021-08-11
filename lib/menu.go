@@ -1,7 +1,6 @@
 package lib
 
 import(
-  // "fmt"
   "log"
   "image"
   "image/color"
@@ -60,6 +59,11 @@ func (m *Menu)getRec() image.Rectangle {
   return *newRec 
 }
 
+func (m *Menu)containPoint(x, y int) bool{
+  var rec image.Rectangle = m.getRec()
+  return x >= rec.Min.X && y >= rec.Min.Y && x <= rec.Max.X && y <= rec.Max.Y
+}
+
 func (m *Menu)onClick(){
  var x, y int = ebiten.CursorPosition()
   if m.containPoint(x, y) {
@@ -87,11 +91,6 @@ func (m *Menu)Draw(scrren *ebiten.Image){
     menuColor = COLOR_YELLOW
   }
   text.Draw(scrren, m.MenuName, m.fontType, m.Position.X, m.Position.Y, menuColor)
-}
-
-func (m *Menu)containPoint(x, y int) bool{
-  var rec image.Rectangle = m.getRec()
-  return x >= rec.Min.X && y >= rec.Min.Y && x <= rec.Max.X && y <= rec.Max.Y
 }
 
 func NewMenu()*Menu{
