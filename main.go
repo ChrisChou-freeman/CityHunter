@@ -13,13 +13,6 @@ import (
 
 var gameManage lib.GameManager 
 
-func init(){
-  var err error
-  if err != nil {
-      log.Fatal(err)
-  }
-}
-
 type Game struct {}
 
 func (g *Game) Update() error {

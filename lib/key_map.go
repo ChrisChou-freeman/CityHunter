@@ -5,9 +5,7 @@ import(
   "github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-type KeyMap struct{
-  holdKeys []ebiten.Key
-}
+type KeyMap struct{}
 
 // key up
 func(k *KeyMap)IsKeyUpPressed() bool{
@@ -47,3 +45,11 @@ func(k *KeyMap)IsKeyRightHoldPressed()bool{
   return ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) 
 }
 
+// mouse left
+func(k *KeyMap)IsMouseLeftKeyPressed()bool{
+  return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
+}
+
+func(k *KeyMap)IsMouseRightKeyPressed()bool{
+  return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight)
+}
