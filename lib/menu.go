@@ -69,6 +69,7 @@ func (m *Menu)onClick(){
   if m.containPoint(x, y) {
     selectedMenu = m.MenuName
     if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft){
+      MouseLeftInUsing = true
       switch m.MenuName{
         case "EXIT":
           GAMEMODE = "EXIT"

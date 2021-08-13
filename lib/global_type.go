@@ -10,3 +10,8 @@ type FRectangle struct{
   Max FPoint
 }
 
+type LevelData struct{
+  TileData []map[string]int
+  CollisionData map[string][]int
+}
+

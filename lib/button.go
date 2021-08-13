@@ -1,7 +1,6 @@
 package lib 
 
 import(
-  "fmt"
   "log"
   "strconv"
   "strings"
@@ -22,6 +21,7 @@ func(b *Button)mouseHoverOnButton()bool{
 }
 
 func(b *Button)tileOpenBtnClick(){
+  MouseLeftInUsing = true
   if b.levelEditor.showTilesContainer{
     b.levelEditor.showTilesContainer = false
     b.levelEditor.tileOpenBtn.Position.Y -= b.levelEditor.menuContainer.Max.Y
@@ -42,13 +42,11 @@ func(b *Button)tileSelectClick(){
   if err != nil{
     log.Fatal(err)
   }
-  fmt.Println(b.levelEditor.inSelectTile)
 }
 
 func(b *Button)onClick(){
   if b.mouseHoverOnButton(){
-    if b.keyMap.IsMouseLeftKeyPressed() && !b.levelEditor.mouseLeftInUse{
-      b.levelEditor.mouseLeftInUse = true
+    if b.keyMap.IsMouseLeftKeyPressed() && !MouseLeftInUsing{
       switch b.buttonType{
         case "tileOpenBtn":
           b.tileOpenBtnClick()

@@ -1,10 +1,14 @@
 package lib
 
 import(
+  "io"
+  "os"
   "log"
   "fmt"
+
   "path"
   "image/color"
+  "encoding/json"
   "io/ioutil"
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -17,29 +21,39 @@ type LevelEditor struct{
   tileBtnList []*Button
   keymap *KeyMap
   lineList []*FRectangle
+  levelData *LevelData
   menuContainer FRectangle
   levelEditorLayerNumber  int
   levelEditorLayerRepeat int
-  layerScrrolSpeed int
+  layerScrollSpeed int
   tileWidth int
   tileHeight int
   inSelectTile int
   srufaceLayerWidth int
+  tileColNumber int
+  currentLevel int
+  globelScroll float64
   showGrids bool
   showTilesContainer bool
-  mouseLeftInUse bool
+}
+
+func NewLevelEditor() *LevelEditor{
+  var le *LevelEditor = new(LevelEditor)
+  le.init()
+  return le
 }
 
 func (l *LevelEditor)init(){
   l.levelEditorLayerNumber  = 4
   l.levelEditorLayerRepeat = 2
-  l.layerScrrolSpeed = 8
+  l.layerScrollSpeed = 8
   l.keymap = new(KeyMap)
   l.tileWidth = 32
   l.tileHeight = 32
   l.showGrids = false
   l.showTilesContainer = false
   l.menuContainer = FRectangle{Min:FPoint{0, 0}, Max:FPoint{float64(SCRREN_ORI_WIDTH), 100}} 
+  l.levelData = new(LevelData)
   l.LoadContent()
 }
 
@@ -75,11 +89,7 @@ func (l *LevelEditor)LoadGridLine(){
     l.lineList = append(l.lineList, newLine)
   }
   for i:=0; i<l.srufaceLayerWidth * l.levelEditorLayerRepeat; i+=l.tileWidth{
-    newLine := new(FRectangle)
-    newLine.Min.X = float64(i)
-    newLine.Min.Y = 0
-    newLine.Max.X = float64(i)
-    newLine.Max.Y = float64(SCRREN_ORI_HEIGHT)
+    newLine := &FRectangle{Min:FPoint{float64(i), 0}, Max:FPoint{float64(i), float64(SCRREN_ORI_HEIGHT)}}
     l.lineList = append(l.lineList, newLine)
   }
 }
@@ -128,11 +138,73 @@ func(l *LevelEditor)loadTilesButton(){
   }
 }
 
+func(l *LevelEditor)initialLevelData(){
+  cols := l.srufaceLayerWidth * l.levelEditorLayerRepeat / l.tileWidth
+  rows := SCRREN_ORI_HEIGHT / l.tileHeight
+  for row := 0; row < rows; row++{
+    for col := 0; col < cols; col ++{
+      newMap := map[string]int{"X": col * l.tileWidth, "Y": row * l.tileHeight, "tile": -1}
+      l.levelData.TileData = append(l.levelData.TileData, newMap)
+    }
+  }
+}
+
+func(l *LevelEditor)loadLevelData() error{ 
+  levelDataPath := fmt.Sprintf("content/leveldata/%v.json", l.currentLevel)
+  var isNewFile bool
+  var fileObj *os.File
+  var err error
+  var fileState os.FileInfo
+  defer fileObj.Close()
+  if fileState, err = os.Stat(levelDataPath); os.IsNotExist(err){
+    isNewFile = true
+    fileObj, err = os.Create(levelDataPath)
+    if err != nil{
+      return err
+    }
+  }else{
+    fileObj, err = os.Open(levelDataPath)
+    if err != nil{
+      return err
+    }
+  }
+  if isNewFile || fileState.Size()==0{
+    l.initialLevelData()
+  }else{
+    jsonByte, err := io.ReadAll(fileObj)
+    if err != nil{
+      return err
+    }
+    err = json.Unmarshal(jsonByte, l.levelData)
+    if err != nil{
+      return err
+    }
+  }
+  return nil
+}
+
+func(l *LevelEditor)saveLevelData(){
+  levelDataPath := fmt.Sprintf("content/leveldata/%v.json", l.currentLevel)
+  jsonByte, err := json.Marshal(l.levelData)
+  if err != nil{
+    log.Fatal(err)
+  }
+  err = os.WriteFile(levelDataPath, jsonByte, 0644)
+  if err != nil{
+    log.Fatal(err)
+  }
+}
+
 func (l *LevelEditor)LoadContent(){
   l.srufaceLayerWidth = l.loadLevelEditorLayers()
+  l.tileColNumber = l.srufaceLayerWidth * l.levelEditorLayerRepeat / l.tileWidth
   l.LoadGridLine()
   l.loadSurfaceButton()
   l.loadTilesButton()
+  err := l.loadLevelData()
+  if err != nil{
+    log.Fatal(err)
+  }
 }
 
 func (l *LevelEditor)handleLayerScroll(mod string){
@@ -149,7 +221,8 @@ func (l *LevelEditor)handleLayerScroll(mod string){
   for i := 0; i<l.levelEditorLayerRepeat; i++ {
     for j := 0; j<l.levelEditorLayerNumber; j++{
       var index int = i * l.levelEditorLayerNumber + j
-       var dfLayerSpeed float64 = float64(l.layerScrrolSpeed) * (float64(j + 1) / float64(l.levelEditorLayerNumber))
+      // dfLayerSpeed is deffrent layer speed
+      var dfLayerSpeed float64 = float64(l.layerScrollSpeed) * (float64(j + 1) / float64(l.levelEditorLayerNumber))
       if mod == "right"{
         l.levelEdirorLayers[index].Position.X -= dfLayerSpeed 
       }else{
@@ -159,12 +232,17 @@ func (l *LevelEditor)handleLayerScroll(mod string){
   }
   for _, line := range(l.lineList){
     if mod == "right"{
-      line.Min.X -= float64(l.layerScrrolSpeed)
-      line.Max.X -= float64(l.layerScrrolSpeed)
+      line.Min.X -= float64(l.layerScrollSpeed)
+      line.Max.X -= float64(l.layerScrollSpeed)
     }else{
-      line.Min.X += float64(l.layerScrrolSpeed)
-      line.Max.X += float64(l.layerScrrolSpeed)
+      line.Min.X += float64(l.layerScrollSpeed)
+      line.Max.X += float64(l.layerScrollSpeed)
     }
+  }
+  if mod == "right"{
+    l.globelScroll -= float64(l.layerScrollSpeed)
+  }else{
+    l.globelScroll += float64(l.layerScrollSpeed)
   }
 }
 
@@ -186,17 +264,49 @@ func (l *LevelEditor)keyEvent(){
       l.showGrids = true
     }
   }
+
+  if inpututil.IsKeyJustPressed(ebiten.KeyS){
+    l.saveLevelData()
+  }
+}
+
+func(l *LevelEditor)gridArea()bool{
+  x, y := ebiten.CursorPosition()
+  inMenuContainer := float64(x) >= l.menuContainer.Min.X && float64(y) >= l.menuContainer.Min.Y && float64(x) <= l.menuContainer.Max.X && float64(y) <= l.menuContainer.Max.Y
+  tileOpenBtnRec := l.tileOpenBtn.getRec()
+  inTileOpenBtn := x >= tileOpenBtnRec.Min.X && y >= tileOpenBtnRec.Min.Y && x <= tileOpenBtnRec.Max.X && y <= tileOpenBtnRec.Max.Y
+  return (!inMenuContainer || !l.showTilesContainer) && !inTileOpenBtn
+}
+
+func (l *LevelEditor)mouseEvent(){
+  // grid area click
+  x, y := ebiten.CursorPosition()
+  if x >= SCRREN_ORI_WIDTH || y >= SCRREN_ORI_HEIGHT{
+    return
+  }
+  if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !MouseLeftInUsing && l.gridArea(){
+    x -= int(l.globelScroll)
+    x/=l.tileWidth
+    y/=l.tileHeight
+    l.levelData.TileData[y*l.tileColNumber+x]["tile"] = l.inSelectTile
+  }else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) && !MouseLeftInUsing && l.gridArea(){
+    x -= int(l.globelScroll)
+    x/=l.tileWidth
+    y/=l.tileHeight
+    l.levelData.TileData[y*l.tileColNumber+x]["tile"] = -1
+  }
 }
 
 func(l *LevelEditor) Update(){
   if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft){
-    l.mouseLeftInUse = false
+    MouseLeftInUsing = false
   }
   l.keyEvent()
   l.tileOpenBtn.Update()
   for _, tile := range(l.tileBtnList){
     tile.Update()
   }
+  l.mouseEvent()
 }
 
 func(l *LevelEditor)DrawLayers(scrren *ebiten.Image){
@@ -230,11 +340,31 @@ func(l *LevelEditor)DrawButton(screen *ebiten.Image){
   l.tileOpenBtn.Draw(screen)
 }
 
+func(l *LevelEditor)DrawTiles(screen *ebiten.Image){
+  for _, tile := range(l.levelData.TileData){
+    if tile["tile"] == -1{
+      continue
+    }
+    var textTure *ebiten.Image
+    for _, item := range(l.tileBtnList){
+      if item.SpriteName == fmt.Sprintf("%v.png", tile["tile"]){
+        textTure = item.Texture
+        break
+      }
+    }
+    iopt := new(ebiten.DrawImageOptions) 
+    tilex := float64(tile["X"]) + l.globelScroll
+    iopt.GeoM.Translate(float64(tilex), float64(tile["Y"]))
+    screen.DrawImage(textTure, iopt)
+  }
+}
+
 func(l *LevelEditor) Draw(scrren *ebiten.Image){
   l.DrawLayers(scrren)
   l.DrawGrids(scrren)
   l.DrawTilesContainer(scrren)
   l.DrawButton(scrren)
+  l.DrawTiles(scrren)
 }
 
 func(l *LevelEditor) Dispose(){
@@ -247,8 +377,3 @@ func(l *LevelEditor) Dispose(){
   l.tileOpenBtn.Dispose()
 }
 
-func NewLevelEditor() *LevelEditor{
-  var le *LevelEditor = new(LevelEditor)
-  le.init()
-  return le
-}

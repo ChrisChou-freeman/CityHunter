@@ -7,6 +7,8 @@ import(
 
 type KeyMap struct{}
 
+var MouseLeftInUsing bool
+
 // key up
 func(k *KeyMap)IsKeyUpPressed() bool{
   return inpututil.IsKeyJustPressed(ebiten.KeyW) || inpututil.IsKeyJustPressed(ebiten.KeyUp)
