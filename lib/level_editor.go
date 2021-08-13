@@ -67,7 +67,11 @@ func (l *LevelEditor)loadLevelEditorLayers() int {
 
 func (l *LevelEditor)LoadGridLine(){
   for i:=0; i<SCRREN_ORI_HEIGHT; i+=l.tileHeight{
-    newLine := &FRectangle{Min:FPoint{0, float64(i)}, Max:FPoint{float64(l.srufaceLayerWidth * l.levelEditorLayerRepeat), float64(i)}}
+    newLine := &FRectangle{
+      Min:FPoint{0, float64(i)},
+      Max:FPoint{float64(l.srufaceLayerWidth * l.levelEditorLayerRepeat),
+      float64(i)},
+    }
     l.lineList = append(l.lineList, newLine)
   }
   for i:=0; i<l.srufaceLayerWidth * l.levelEditorLayerRepeat; i+=l.tileWidth{
