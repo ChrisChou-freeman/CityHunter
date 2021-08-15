@@ -21,8 +21,8 @@ type LevelEditor struct{
   tileBtnList []*Button
   keymap *KeyMap
   lineList []*FRectangle
-  levelData *LevelData
   menuContainer FRectangle
+  levelData *LevelData
   levelEditorLayerNumber  int
   levelEditorLayerRepeat int
   layerScrollSpeed int
@@ -53,7 +53,7 @@ func (l *LevelEditor)init(){
   l.showGrids = false
   l.showTilesContainer = false
   l.menuContainer = FRectangle{Min:FPoint{0, 0}, Max:FPoint{float64(SCRREN_ORI_WIDTH), 100}} 
-  l.levelData = new(LevelData)
+  l.levelData = NewLevelData()
   l.LoadContent()
 }
 
@@ -340,6 +340,15 @@ func(l *LevelEditor)DrawButton(screen *ebiten.Image){
   l.tileOpenBtn.Draw(screen)
 }
 
+func(l *LevelEditor)getTileCollisionInfo(tile int)string{
+  if fullCollisionList, ok := l.levelData.CollisionData["full"]; ok{
+    if SliceContainItem(fullCollisionList, tile) != -1{
+      return "full"
+    }
+  }
+  return ""
+}
+
 func(l *LevelEditor)DrawTiles(screen *ebiten.Image){
   for _, tile := range(l.levelData.TileData){
     if tile["tile"] == -1{
@@ -352,10 +361,15 @@ func(l *LevelEditor)DrawTiles(screen *ebiten.Image){
         break
       }
     }
-    iopt := new(ebiten.DrawImageOptions) 
     tilex := float64(tile["X"]) + l.globelScroll
-    iopt.GeoM.Translate(float64(tilex), float64(tile["Y"]))
-    screen.DrawImage(textTure, iopt)
+    newSprite := &Sprite{
+      Texture: textTure,
+      Position: &FPoint{float64(tilex), float64(tile["Y"])},
+      CollisionInfo: l.getTileCollisionInfo(tile["tile"])}
+    newSprite.Draw(screen)
+    if l.showGrids{
+      newSprite.DrawCollisionVisual(screen)
+    }
   }
 }
 

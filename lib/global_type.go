@@ -15,3 +15,13 @@ type LevelData struct{
   CollisionData map[string][]int
 }
 
+func NewLevelData()*LevelData{
+  ld := new(LevelData)
+  ld.init()
+  return ld
+}
+
+func(l *LevelData)init(){
+  l.CollisionData = make(map[string][]int)
+}
+

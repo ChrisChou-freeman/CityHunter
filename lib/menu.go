@@ -7,7 +7,6 @@ import(
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
-
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/text"
   "github.com/hajimehoshi/ebiten/v2/inpututil"

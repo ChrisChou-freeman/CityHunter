@@ -8,7 +8,7 @@ import (
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type GameStart struct{
+type GameMain struct{
   cloudNumber int
   gameStartLayers [8]*ebiten.Image
   layerPosition [8]FPoint
@@ -16,14 +16,14 @@ type GameStart struct{
   keyMap *KeyMap
 }
 
-func (g *GameStart) init(){
+func (g *GameMain) init(){
   g.cloudNumber = 3
   g.layerPosition  = [8]FPoint{{0, 0}, {0, 0}, {0, 230}, {0, 250}, {0, 250}, {0, 0}, {0, 0}, {0, 0}}
   g.LoadContent()
   g.keyMap = new(KeyMap) 
 }
 
-func (g *GameStart)loadBackGround() error{
+func (g *GameMain)loadBackGround() error{
   var err error
   var gameLarnerNumber = len(g.gameStartLayers)
   var cloudImageIndex int
@@ -40,7 +40,7 @@ func (g *GameStart)loadBackGround() error{
   return err
 }
 
-func (g *GameStart)loadMenu() {
+func (g *GameMain)loadMenu() {
   var menuName [3]string = [3]string{"START", "DEV", "EXIT"}
   for i:=0; i<len(g.menuList); i++{
     var  menu *Menu = NewMenu() 
@@ -51,7 +51,7 @@ func (g *GameStart)loadMenu() {
   }
 }
 
-func(g *GameStart)LoadContent(){
+func(g *GameMain)LoadContent(){
   var err error = g.loadBackGround()
   if err != nil {
     log.Fatal(err)
@@ -59,7 +59,7 @@ func(g *GameStart)LoadContent(){
   g.loadMenu()
 }
 
-func (g *GameStart)SelectMenu(mod string){
+func (g *GameMain)SelectMenu(mod string){
   var menuIndex int
   var menuListLength = len(g.menuList)
   if selectedMenu == ""{
@@ -90,7 +90,7 @@ func (g *GameStart)SelectMenu(mod string){
   selectedMenu = g.menuList[menuIndex].MenuName
 }
 
-func (g *GameStart)keyEvent(){
+func (g *GameMain)keyEvent(){
   if g.keyMap.IsKeyUpPressed(){
     g.SelectMenu("pre")
   }else if g.keyMap.IsKeyDownPressed(){
@@ -101,7 +101,7 @@ func (g *GameStart)keyEvent(){
   }
 }
 
-func (g *GameStart)updateCloud(){
+func (g *GameMain)updateCloud(){
   var count int = 1
   var layerNumber int  = len(g.gameStartLayers)
   for i := layerNumber - g.cloudNumber; i< layerNumber; i++{
@@ -113,7 +113,7 @@ func (g *GameStart)updateCloud(){
   }
 }
 
-func (g *GameStart ) Update(){
+func (g *GameMain ) Update(){
   g.updateCloud()
   for _, item := range(g.menuList){
     item.Update()
@@ -121,7 +121,7 @@ func (g *GameStart ) Update(){
   g.keyEvent()
 }
 
-func (g *GameStart) Draw(screen *ebiten.Image){
+func (g *GameMain) Draw(screen *ebiten.Image){
   for index, item := range(g.gameStartLayers){
     var iop *ebiten.DrawImageOptions = new(ebiten.DrawImageOptions)
     iop.GeoM.Translate(g.layerPosition[index].X, g.layerPosition[index].Y)
@@ -132,14 +132,14 @@ func (g *GameStart) Draw(screen *ebiten.Image){
   }
 }
 
-func (g *GameStart) Dispose(){
+func (g *GameMain) Dispose(){
   for _, layer := range(g.gameStartLayers){
     layer.Dispose()
   }
 }
 
-func NewGameMain()*GameStart{
-  var ng *GameStart = new(GameStart)
+func NewGameMain()*GameMain{
+  var ng *GameMain = new(GameMain)
   ng.init()
   return ng 
 }

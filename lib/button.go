@@ -1,6 +1,7 @@
 package lib 
 
 import(
+  "fmt"
   "log"
   "strconv"
   "strings"
@@ -44,6 +45,25 @@ func(b *Button)tileSelectClick(){
   }
 }
 
+func(b *Button)tileCollisionSetClick(){
+  if(!b.levelEditor.showTilesContainer){
+    return
+  }
+  b.tileSelectClick()
+  if fullCollisionList, ok := b.levelEditor.levelData.CollisionData["full"]; ok{
+    if index := SliceContainItem(fullCollisionList, b.levelEditor.inSelectTile); index != -1{
+      fullCollisionList = SliceRemove(fullCollisionList, index)
+      b.levelEditor.levelData.CollisionData["full"] = fullCollisionList
+    }else{
+      fullCollisionList = append(fullCollisionList, b.levelEditor.inSelectTile)
+      b.levelEditor.levelData.CollisionData["full"] = fullCollisionList
+    }
+  }else{
+      b.levelEditor.levelData.CollisionData["full"] = []int{b.levelEditor.inSelectTile} 
+  }
+  fmt.Println(b.levelEditor.levelData.CollisionData)
+}
+
 func(b *Button)onClick(){
   if b.mouseHoverOnButton(){
     if b.keyMap.IsMouseLeftKeyPressed() && !MouseLeftInUsing{
@@ -52,6 +72,12 @@ func(b *Button)onClick(){
           b.tileOpenBtnClick()
         case "tile":
           b.tileSelectClick()
+      }
+    }
+    if b.keyMap.IsMouseRightKeyPressed() && !MouseLeftInUsing{
+      switch b.buttonType{
+      case "tile":
+        b.tileCollisionSetClick()
       }
     }
   }

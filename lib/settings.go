@@ -19,6 +19,7 @@ var (
   COLOR_YELLOW color.RGBA = color.RGBA{255, 255, 1, 255}
   COLOR_WHITE color.RGBA = color.RGBA{255, 255, 255, 255}
   COLOR_GREY color.RGBA = color.RGBA{192, 192, 192, 255}
+  COLOR_RED color.RGBA = color.RGBA{240, 52, 52, 255}
   GAMEMODE string = "GAMEMAIN"
 )
 
