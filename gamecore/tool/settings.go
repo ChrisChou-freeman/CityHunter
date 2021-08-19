@@ -1,18 +1,20 @@
-package lib
+package tool 
 
 import(
   "image/color"
 )
 
 const (
-  SCRREN_WIDTH int = 1280 
-  SCRREN_HEIGHT  int = 720 
-
-  SCRREN_ORI_WIDTH int = 800
-  SCRREN_ORI_HEIGHT int  = 480
+  SCRREN_WIDTH = 1280 
+  SCRREN_HEIGHT  = 720 
+  SCRREN_ORI_WIDTH = 800
+  SCRREN_ORI_HEIGHT = 480
+  PLAYERTILE = 15
+  ENEMYTILE = 16
 
   SCRREN_WIDTH_SCAL = float64(SCRREN_ORI_WIDTH) / float64(SCRREN_WIDTH)
   SCRREN_HEIGHT_SCAL = float64(SCRREN_ORI_HEIGHT) / float64(SCRREN_HEIGHT) 
+  TILES_PATH = "content/tiles/%v.png"
 )
 
 var (

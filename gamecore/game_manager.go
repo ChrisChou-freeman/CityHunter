@@ -1,4 +1,4 @@
-package lib
+package gamecore 
 
 import(
   "github.com/hajimehoshi/ebiten/v2"

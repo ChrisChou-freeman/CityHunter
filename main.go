@@ -8,29 +8,39 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-  "github.com/ChrisChou-freeman/CityHunter/lib"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
 )
 
-var gameManage lib.GameManager 
+var gameManage gamecore.GameManager 
 
 type Game struct {}
 
 func (g *Game) Update() error {
-  switch lib.GAMEMODE{
-    case "GAMEMAIN":
-      if gameManage != nil{
-        gameManage.Dispose()
-      }
-      gameManage = lib.NewGameMain() 
-      lib.GAMEMODE = ""
-    case "DEV":
-      if gameManage != nil{
-        gameManage.Dispose()
-      }
-      gameManage = lib.NewLevelEditor() 
-      lib.GAMEMODE = ""
-    case "EXIT":
-      os.Exit(0)
+  switch tool.GAMEMODE{
+  case "GAMEMAIN":
+    if gameManage != nil{
+      gameManage.Dispose()
+    }
+    gameManage = gamecore.NewGameMain() 
+    tool.GAMEMODE = ""
+
+  case "START":
+    if gameManage != nil{
+      gameManage.Dispose()
+    }
+    gameManage = gamecore.NewGameStart()
+    tool.GAMEMODE = ""
+
+  case "DEV":
+    if gameManage != nil{
+      gameManage.Dispose()
+    }
+    gameManage = gamecore.NewLevelEditor() 
+    tool.GAMEMODE = ""
+
+  case "EXIT":
+    os.Exit(0)
   }
   gameManage.Update()
 	return nil
@@ -42,11 +52,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return lib.SCRREN_ORI_WIDTH, lib.SCRREN_ORI_HEIGHT 
+	return tool.SCRREN_ORI_WIDTH, tool.SCRREN_ORI_HEIGHT 
 }
 
 func main() {
-	ebiten.SetWindowSize(lib.SCRREN_WIDTH, lib.SCRREN_HEIGHT)
+	ebiten.SetWindowSize(tool.SCRREN_WIDTH, tool.SCRREN_HEIGHT)
 	ebiten.SetWindowTitle("City Hunter")
   var game *Game = new(Game) 
 	if err := ebiten.RunGame(game); err != nil {

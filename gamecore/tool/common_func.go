@@ -1,4 +1,4 @@
-package lib
+package tool 
 
 func SliceContainItem(l []int, i int)int{
   for index, item := range(l){

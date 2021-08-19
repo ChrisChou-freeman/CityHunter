@@ -1,4 +1,4 @@
-package lib
+package tool 
 
 type FPoint struct{
   X float64

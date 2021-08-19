@@ -1,4 +1,4 @@
-package lib
+package gamecore 
 
 import(
   "log"
@@ -11,6 +11,9 @@ import(
   "github.com/hajimehoshi/ebiten/v2/text"
   "github.com/hajimehoshi/ebiten/v2/inpututil"
   "github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/input"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
 )
 
 type Menu struct{
@@ -68,14 +71,14 @@ func (m *Menu)onClick(){
   if m.containPoint(x, y) {
     selectedMenu = m.MenuName
     if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft){
-      MouseLeftInUsing = true
+      input.MouseLeftInUsing = true
       switch m.MenuName{
         case "EXIT":
-          GAMEMODE = "EXIT"
+          tool.GAMEMODE = "EXIT"
         case "DEV":
-          GAMEMODE = "DEV"
+          tool.GAMEMODE = "DEV"
         case "START":
-          GAMEMODE = "START"
+          tool.GAMEMODE = "START"
       }
     }
   }
@@ -88,7 +91,7 @@ func (m *Menu)Update(){
 func (m *Menu)Draw(scrren *ebiten.Image){
   var menuColor color.RGBA = m.MenuColor
   if m.MenuName == selectedMenu{
-    menuColor = COLOR_YELLOW
+    menuColor = tool.COLOR_YELLOW
   }
   text.Draw(scrren, m.MenuName, m.fontType, m.Position.X, m.Position.Y, menuColor)
 }

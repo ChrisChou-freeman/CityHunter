@@ -1,28 +1,34 @@
-package lib
+package gamecore
 
 import(
   "io"
   "os"
   "log"
   "fmt"
-
   "path"
+  "strconv"
+  "strings"
   "image/color"
   "encoding/json"
-  "io/ioutil"
+
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/inpututil"
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/input"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/texture"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/ui"
 )
 
 type LevelEditor struct{
-  levelEdirorLayers []*Sprite
-  tileOpenBtn *Button
-  tileBtnList []*Button
-  keymap *KeyMap
-  lineList []*FRectangle
-  menuContainer FRectangle
-  levelData *LevelData
+  levelEdirorLayers []*texture.Sprite
+  tileOpenBtn *ui.Button
+  tileBtnList []*ui.Button
+  keymap *input.KeyMap
+  lineList []*tool.FRectangle
+  menuContainer tool.FRectangle
+  levelData *tool.LevelData
   levelEditorLayerNumber  int
   levelEditorLayerRepeat int
   layerScrollSpeed int
@@ -47,13 +53,13 @@ func (l *LevelEditor)init(){
   l.levelEditorLayerNumber  = 4
   l.levelEditorLayerRepeat = 2
   l.layerScrollSpeed = 8
-  l.keymap = new(KeyMap)
+  l.keymap = new(input.KeyMap)
   l.tileWidth = 32
   l.tileHeight = 32
   l.showGrids = false
   l.showTilesContainer = false
-  l.menuContainer = FRectangle{Min:FPoint{0, 0}, Max:FPoint{float64(SCRREN_ORI_WIDTH), 100}} 
-  l.levelData = NewLevelData()
+  l.menuContainer = tool.FRectangle{Min:tool.FPoint{X:0, Y:0}, Max:tool.FPoint{X:float64(tool.SCRREN_ORI_WIDTH), Y:100}} 
+  l.levelData = tool.NewLevelData()
   l.LoadContent()
 }
 
@@ -61,7 +67,7 @@ func (l *LevelEditor)loadLevelEditorLayers() int {
   var lastLayerWidth int
   for i := 0; i<l.levelEditorLayerRepeat; i++{
     for j := 0; j<l.levelEditorLayerNumber; j++{
-      var layerPath string = fmt.Sprintf("content/backgrounds/layer%v_0.png", j) 
+      var layerPath string = fmt.Sprintf("content/gamestart/layer%v_0.png", j) 
       var layerImage *ebiten.Image
       var err error
       layerImage, _, err = ebitenutil.NewImageFromFile(layerPath) 
@@ -69,7 +75,7 @@ func (l *LevelEditor)loadLevelEditorLayers() int {
         log.Fatal(err)
       }
       layWidth, _ := layerImage.Size()
-      laySprite := &Sprite{Position:&FPoint{float64(i*layWidth), float64(j*80)}, Texture:layerImage}
+      laySprite := &texture.Sprite{Position:&tool.FPoint{X: float64(i*layWidth), Y: float64(j*80)}, Texture:layerImage}
       l.levelEdirorLayers = append(l.levelEdirorLayers, laySprite)
       if j == l.levelEditorLayerNumber -1{
         lastLayerWidth = layWidth
@@ -80,16 +86,16 @@ func (l *LevelEditor)loadLevelEditorLayers() int {
 }
 
 func (l *LevelEditor)LoadGridLine(){
-  for i:=0; i<SCRREN_ORI_HEIGHT; i+=l.tileHeight{
-    newLine := &FRectangle{
-      Min:FPoint{0, float64(i)},
-      Max:FPoint{float64(l.srufaceLayerWidth * l.levelEditorLayerRepeat),
-      float64(i)},
+  for i:=0; i<tool.SCRREN_ORI_HEIGHT; i+=l.tileHeight{
+    newLine := &tool.FRectangle{
+      Min:tool.FPoint{X: 0, Y: float64(i)},
+      Max:tool.FPoint{X: float64(l.srufaceLayerWidth * l.levelEditorLayerRepeat),
+      Y: float64(i)},
     }
     l.lineList = append(l.lineList, newLine)
   }
   for i:=0; i<l.srufaceLayerWidth * l.levelEditorLayerRepeat; i+=l.tileWidth{
-    newLine := &FRectangle{Min:FPoint{float64(i), 0}, Max:FPoint{float64(i), float64(SCRREN_ORI_HEIGHT)}}
+    newLine := &tool.FRectangle{Min:tool.FPoint{X: float64(i), Y: 0}, Max:tool.FPoint{X: float64(i), Y: float64(tool.SCRREN_ORI_HEIGHT)}}
     l.lineList = append(l.lineList, newLine)
   }
 }
@@ -99,20 +105,19 @@ func (l *LevelEditor)loadSurfaceButton(){
   if err != nil{
     log.Fatal(err)
   }
-  newSprite := &Sprite{Texture:newTexture, Position:&FPoint{10, 10}}
-  newOpenTileBtn := &Button{buttonType:"tileOpenBtn", levelEditor:l, Sprite:newSprite, keyMap:l.keymap} 
+  newOpenTileBtn := &ui.Button{Sprite: &texture.Sprite{Texture:newTexture, Position:&tool.FPoint{X: 10, Y: 10}}} 
   l.tileOpenBtn = newOpenTileBtn
 }
 
 func(l *LevelEditor)loadTilesButton(){
   baseFileDir := "content/tiles/"
-  files, err := ioutil.ReadDir(baseFileDir)
+  files, err := os.ReadDir(baseFileDir)
   if err != nil{
     log.Fatal(err)
   }
 
   tileWidthSpace := 10
-  cols := SCRREN_ORI_WIDTH / (l.tileWidth + tileWidthSpace)
+  cols := tool.SCRREN_ORI_WIDTH / (l.tileWidth + tileWidthSpace)
   row := len(files) / cols
   if len(files) % cols > 0 {
     row ++
@@ -126,21 +131,20 @@ func(l *LevelEditor)loadTilesButton(){
     if err != nil {
       log.Fatal(err)
     }
-    newPosition := &FPoint{float64(currentCol * l.tileWidth + currentCol* tileWidthSpace), float64(currentRow * l.tileHeight)}
-    newSprite := &Sprite{Texture:newTexture, Position:newPosition, SpriteName:file.Name()}
+    newPosition := &tool.FPoint{X: float64(currentCol * l.tileWidth + currentCol* tileWidthSpace), Y: float64(currentRow * l.tileHeight)}
     currentCol++
     if currentCol == cols{
       currentRow ++
       currentCol = 0
     }
-    newButton := &Button{Sprite:newSprite, levelEditor:l, buttonType:"tile", keyMap:l.keymap}
+    newButton := &ui.Button{Sprite: &texture.Sprite{Texture:newTexture, Position:newPosition, SpriteName:file.Name()}}
     l.tileBtnList = append(l.tileBtnList, newButton)
   }
 }
 
 func(l *LevelEditor)initialLevelData(){
   cols := l.srufaceLayerWidth * l.levelEditorLayerRepeat / l.tileWidth
-  rows := SCRREN_ORI_HEIGHT / l.tileHeight
+  rows := tool.SCRREN_ORI_HEIGHT / l.tileHeight
   for row := 0; row < rows; row++{
     for col := 0; col < cols; col ++{
       newMap := map[string]int{"X": col * l.tileWidth, "Y": row * l.tileHeight, "tile": -1}
@@ -210,11 +214,11 @@ func (l *LevelEditor)LoadContent(){
 func (l *LevelEditor)handleLayerScroll(mod string){
   var leayerLength int = len(l.levelEdirorLayers)
   if mod == "right"{
-      if l.levelEdirorLayers[leayerLength-1].getRec().Max.X <= SCRREN_ORI_WIDTH{
+      if l.levelEdirorLayers[leayerLength-1].GetRec().Max.X <= tool.SCRREN_ORI_WIDTH{
         return
       }
   }else{
-      if l.levelEdirorLayers[l.levelEditorLayerNumber-1].getRec().Min.X >= 0{
+      if l.levelEdirorLayers[l.levelEditorLayerNumber-1].GetRec().Min.X >= 0{
         return
       }
   }
@@ -248,7 +252,7 @@ func (l *LevelEditor)handleLayerScroll(mod string){
 
 func (l *LevelEditor)keyEvent(){
   if l.keymap.IsKeyBackPressed(){
-    GAMEMODE = "GAMEMAIN"
+    tool.GAMEMODE = "GAMEMAIN"
   }
 
   if l.keymap.IsKeyRightHoldPressed(){
@@ -270,26 +274,65 @@ func (l *LevelEditor)keyEvent(){
   }
 }
 
-func(l *LevelEditor)gridArea()bool{
+func(l *LevelEditor)getGridArea()bool{
   x, y := ebiten.CursorPosition()
   inMenuContainer := float64(x) >= l.menuContainer.Min.X && float64(y) >= l.menuContainer.Min.Y && float64(x) <= l.menuContainer.Max.X && float64(y) <= l.menuContainer.Max.Y
-  tileOpenBtnRec := l.tileOpenBtn.getRec()
+  tileOpenBtnRec := l.tileOpenBtn.GetRec()
   inTileOpenBtn := x >= tileOpenBtnRec.Min.X && y >= tileOpenBtnRec.Min.Y && x <= tileOpenBtnRec.Max.X && y <= tileOpenBtnRec.Max.Y
   return (!inMenuContainer || !l.showTilesContainer) && !inTileOpenBtn
+}
+
+func(b *LevelEditor)tileOpenBtnClick(){
+  if  b.keymap.IsMouseLeftKeyPressed() && !input.MouseLeftInUsing{
+    input.MouseLeftInUsing = true
+    if b.showTilesContainer{
+      b.showTilesContainer = false
+      b.tileOpenBtn.Position.Y -= b.menuContainer.Max.Y
+    }else{
+      b.showTilesContainer = true 
+      b.tileOpenBtn.Position.Y += b.menuContainer.Max.Y
+    }
+  }
+}
+
+func(l *LevelEditor)tileSelectClick(button *ui.Button){
+  texture.InSelectSprite = button.SpriteName
+  n := strings.Split(button.SpriteName, ".")[0]
+  var err error
+  l.inSelectTile, err = strconv.Atoi(n)
+  if err != nil{
+    log.Fatal(err)
+  }
+}
+
+func(l *LevelEditor)tileCollisionSetClick(button *ui.Button){
+  l.tileSelectClick(button)
+  if fullCollisionList, ok := l.levelData.CollisionData["full"]; ok{
+    if index := tool.SliceContainItem(fullCollisionList, l.inSelectTile); index != -1{
+      fullCollisionList = tool.SliceRemove(fullCollisionList, index)
+      l.levelData.CollisionData["full"] = fullCollisionList
+    }else{
+      fullCollisionList = append(fullCollisionList, l.inSelectTile)
+      l.levelData.CollisionData["full"] = fullCollisionList
+    }
+  }else{
+      l.levelData.CollisionData["full"] = []int{l.inSelectTile} 
+  }
+  fmt.Println(l.levelData.CollisionData)
 }
 
 func (l *LevelEditor)mouseEvent(){
   // grid area click
   x, y := ebiten.CursorPosition()
-  if x >= SCRREN_ORI_WIDTH || y >= SCRREN_ORI_HEIGHT{
+  if x >= tool.SCRREN_ORI_WIDTH || y >= tool.SCRREN_ORI_HEIGHT{
     return
   }
-  if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !MouseLeftInUsing && l.gridArea(){
+  if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !input.MouseLeftInUsing && l.getGridArea(){
     x -= int(l.globelScroll)
     x/=l.tileWidth
     y/=l.tileHeight
     l.levelData.TileData[y*l.tileColNumber+x]["tile"] = l.inSelectTile
-  }else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) && !MouseLeftInUsing && l.gridArea(){
+  }else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) && !input.MouseLeftInUsing && l.getGridArea(){
     x -= int(l.globelScroll)
     x/=l.tileWidth
     y/=l.tileHeight
@@ -297,15 +340,27 @@ func (l *LevelEditor)mouseEvent(){
   }
 }
 
+func (l *LevelEditor)tileButtonUpdate(){
+  // handle tile button mouse click
+  for _, tile := range(l.tileBtnList){
+    var clickEvent func()
+    if l.keymap.IsMouseLeftKeyPressed() && !input.MouseLeftInUsing && l.showTilesContainer{
+      clickEvent = func(){l.tileSelectClick(tile)} 
+      tile.Update(clickEvent)
+    }else if l.keymap.IsMouseRightKeyPressed() && !input.MouseLeftInUsing && l.showTilesContainer{
+      clickEvent = func(){l.tileCollisionSetClick(tile)} 
+      tile.Update(clickEvent)
+    }
+  }
+}
+
 func(l *LevelEditor) Update(){
   if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft){
-    MouseLeftInUsing = false
+    input.MouseLeftInUsing = false
   }
   l.keyEvent()
-  l.tileOpenBtn.Update()
-  for _, tile := range(l.tileBtnList){
-    tile.Update()
-  }
+  l.tileButtonUpdate()
+  l.tileOpenBtn.Update(func(){l.tileOpenBtnClick()})
   l.mouseEvent()
 }
 
@@ -330,7 +385,7 @@ func(l *LevelEditor)DrawTilesContainer(screen *ebiten.Image){
   if !l.showTilesContainer {
     return
   }
-  ebitenutil.DrawRect(screen, l.menuContainer.Min.X, l.menuContainer.Min.Y, l.menuContainer.Max.X, l.menuContainer.Max.Y, COLOR_GREY)
+  ebitenutil.DrawRect(screen, l.menuContainer.Min.X, l.menuContainer.Min.Y, l.menuContainer.Max.X, l.menuContainer.Max.Y, tool.COLOR_GREY)
   for _, btn := range(l.tileBtnList){
     btn.Draw(screen)
   }
@@ -342,7 +397,7 @@ func(l *LevelEditor)DrawButton(screen *ebiten.Image){
 
 func(l *LevelEditor)getTileCollisionInfo(tile int)string{
   if fullCollisionList, ok := l.levelData.CollisionData["full"]; ok{
-    if SliceContainItem(fullCollisionList, tile) != -1{
+    if tool.SliceContainItem(fullCollisionList, tile) != -1{
       return "full"
     }
   }
@@ -362,9 +417,9 @@ func(l *LevelEditor)DrawTiles(screen *ebiten.Image){
       }
     }
     tilex := float64(tile["X"]) + l.globelScroll
-    newSprite := &Sprite{
+    newSprite := &texture.Sprite{
       Texture: textTure,
-      Position: &FPoint{float64(tilex), float64(tile["Y"])},
+      Position: &tool.FPoint{X:float64(tilex), Y:float64(tile["Y"])},
       CollisionInfo: l.getTileCollisionInfo(tile["tile"])}
     newSprite.Draw(screen)
     if l.showGrids{

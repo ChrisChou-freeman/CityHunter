@@ -1,26 +1,30 @@
-package lib
+package gamecore 
 
 import (
   "image"
   "log"
   "fmt"
+
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/input"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
 )
 
 type GameMain struct{
   cloudNumber int
   gameStartLayers [8]*ebiten.Image
-  layerPosition [8]FPoint
+  layerPosition [8]tool.FPoint
   menuList [3]*Menu
-  keyMap *KeyMap
+  keyMap *input.KeyMap
 }
 
 func (g *GameMain) init(){
   g.cloudNumber = 3
-  g.layerPosition  = [8]FPoint{{0, 0}, {0, 0}, {0, 230}, {0, 250}, {0, 250}, {0, 0}, {0, 0}, {0, 0}}
+  g.layerPosition  = [8]tool.FPoint{{0, 0}, {0, 0}, {0, 230}, {0, 250}, {0, 250}, {0, 0}, {0, 0}, {0, 0}}
   g.LoadContent()
-  g.keyMap = new(KeyMap) 
+  g.keyMap = new(input.KeyMap) 
 }
 
 func (g *GameMain)loadBackGround() error{
@@ -30,9 +34,9 @@ func (g *GameMain)loadBackGround() error{
   for i := 0; i < gameLarnerNumber; i++{
     var layerPath string 
     if i < gameLarnerNumber - g.cloudNumber{
-      layerPath = fmt.Sprintf("content/backGrounds/layer%v_1.png", i)
+      layerPath = fmt.Sprintf("content/main/layer%v_1.png", i)
     }else{
-      layerPath = fmt.Sprintf("content/backgrounds/cloudAnimation%v.png", cloudImageIndex);
+      layerPath = fmt.Sprintf("content/main/cloudAnimation%v.png", cloudImageIndex);
       cloudImageIndex++
     }
     g.gameStartLayers[i], _, err = ebitenutil.NewImageFromFile(layerPath)
@@ -44,9 +48,9 @@ func (g *GameMain)loadMenu() {
   var menuName [3]string = [3]string{"START", "DEV", "EXIT"}
   for i:=0; i<len(g.menuList); i++{
     var  menu *Menu = NewMenu() 
-    menu.MenuColor = COLOR_WHITE 
+    menu.MenuColor = tool.COLOR_WHITE 
     menu.MenuName = menuName[i]
-    menu.Position = image.Point{20, SCRREN_ORI_HEIGHT/2 + 40 + 40 * i}
+    menu.Position = image.Point{20, tool.SCRREN_ORI_HEIGHT/2 + 40 + 40 * i}
     g.menuList[i] = menu
   }
 }
@@ -97,7 +101,7 @@ func (g *GameMain)keyEvent(){
     g.SelectMenu("next")
   }
   if g.keyMap.IsKeyEnterPressed() && selectedMenu != ""{
-    GAMEMODE = selectedMenu
+    tool.GAMEMODE = selectedMenu
   }
 }
 
@@ -107,8 +111,8 @@ func (g *GameMain)updateCloud(){
   for i := layerNumber - g.cloudNumber; i< layerNumber; i++{
     g.layerPosition[i].X += 0.05111 * float64(count) 
     count ++
-    if(g.layerPosition[i].X) >= float64(SCRREN_ORI_WIDTH){
-      g.layerPosition[i].X = -float64(SCRREN_ORI_WIDTH)
+    if(g.layerPosition[i].X) >= float64(tool.SCRREN_ORI_WIDTH){
+      g.layerPosition[i].X = -float64(tool.SCRREN_ORI_WIDTH)
     }
   }
 }

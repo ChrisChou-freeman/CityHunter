@@ -1,22 +1,25 @@
-package lib
+package texture 
 
 import(
   "image"
   "image/color"
+
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
 )
 
 var InSelectSprite string
 
 type Sprite struct{
   Texture *ebiten.Image
-  Position *FPoint
+  Position *tool.FPoint
   SpriteName string
   CollisionInfo string
 }
 
-func(s *Sprite)getRec() image.Rectangle{
+func(s *Sprite)GetRec() image.Rectangle{
   width, height := s.Texture.Size()
   rec := image.Rectangle{
     Min:image.Point{int(s.Position.X), int(s.Position.Y)},
@@ -28,7 +31,7 @@ func(s *Sprite)getRec() image.Rectangle{
 func(s *Sprite)Update(){}
 
 func(s *Sprite)DrawEdge(screen *ebiten.Image, top bool, left bool, bottom bool, right bool, lineColor color.RGBA){
-    thisRec := s.getRec()
+    thisRec := s.GetRec()
     if top{
       // up line
       ebitenutil.DrawLine(screen, float64(thisRec.Min.X), float64(thisRec.Min.Y), float64(thisRec.Max.X), float64(thisRec.Min.Y), lineColor)
@@ -49,7 +52,7 @@ func(s *Sprite)DrawEdge(screen *ebiten.Image, top bool, left bool, bottom bool, 
 
 func(s *Sprite)DrawSelectedBox(screen *ebiten.Image){
   if s.SpriteName == InSelectSprite && s.SpriteName != ""{
-    s.DrawEdge(screen, true, true, true, true, COLOR_YELLOW)
+    s.DrawEdge(screen, true, true, true, true, tool.COLOR_YELLOW)
   }
 }
 
@@ -59,7 +62,7 @@ func(s *Sprite)DrawCollisionVisual(screen *ebiten.Image){
   }
   switch s.CollisionInfo{
   case "full":
-    s.DrawEdge(screen, true, true, true, true, COLOR_RED)
+    s.DrawEdge(screen, true, true, true, true, tool.COLOR_RED)
   }
 }
 
