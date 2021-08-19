@@ -10,19 +10,34 @@ import (
 
   "github.com/ChrisChou-freeman/CityHunter/gamecore/input"
   "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/ui"
 )
 
 type GameMain struct{
   cloudNumber int
   gameStartLayers [8]*ebiten.Image
   layerPosition [8]tool.FPoint
-  menuList [3]*Menu
+  menuList [3]*ui.Menu
   keyMap *input.KeyMap
+}
+
+func NewGameMain()*GameMain{
+  ng := new(GameMain)
+  ng.init()
+  return ng 
 }
 
 func (g *GameMain) init(){
   g.cloudNumber = 3
-  g.layerPosition  = [8]tool.FPoint{{0, 0}, {0, 0}, {0, 230}, {0, 250}, {0, 250}, {0, 0}, {0, 0}, {0, 0}}
+  g.layerPosition  = [8]tool.FPoint{
+    {X: 0, Y: 0},
+    {X: 0, Y: 0},
+    {X: 0, Y: 230},
+    {X: 0, Y: 250},
+    {X: 0, Y: 250},
+    {X: 0, Y: 0},
+    {X: 0, Y: 0},
+    {X: 0, Y: 0}}
   g.LoadContent()
   g.keyMap = new(input.KeyMap) 
 }
@@ -47,7 +62,7 @@ func (g *GameMain)loadBackGround() error{
 func (g *GameMain)loadMenu() {
   var menuName [3]string = [3]string{"START", "DEV", "EXIT"}
   for i:=0; i<len(g.menuList); i++{
-    var  menu *Menu = NewMenu() 
+    menu := ui.NewMenu() 
     menu.MenuColor = tool.COLOR_WHITE 
     menu.MenuName = menuName[i]
     menu.Position = image.Point{20, tool.SCRREN_ORI_HEIGHT/2 + 40 + 40 * i}
@@ -66,7 +81,7 @@ func(g *GameMain)LoadContent(){
 func (g *GameMain)SelectMenu(mod string){
   var menuIndex int
   var menuListLength = len(g.menuList)
-  if selectedMenu == ""{
+  if ui.SelectedMenu == ""{
     if(mod == "next"){
       menuIndex = 0
     }else{
@@ -74,7 +89,7 @@ func (g *GameMain)SelectMenu(mod string){
     }
   }else{
     for index, menu := range(g.menuList){
-      if menu.MenuName == selectedMenu {
+      if menu.MenuName == ui.SelectedMenu {
         menuIndex = index
         break
       }
@@ -91,7 +106,7 @@ func (g *GameMain)SelectMenu(mod string){
       }
     }
   }
-  selectedMenu = g.menuList[menuIndex].MenuName
+  ui.SelectedMenu = g.menuList[menuIndex].MenuName
 }
 
 func (g *GameMain)keyEvent(){
@@ -100,8 +115,8 @@ func (g *GameMain)keyEvent(){
   }else if g.keyMap.IsKeyDownPressed(){
     g.SelectMenu("next")
   }
-  if g.keyMap.IsKeyEnterPressed() && selectedMenu != ""{
-    tool.GAMEMODE = selectedMenu
+  if g.keyMap.IsKeyEnterPressed() && ui.SelectedMenu != ""{
+    tool.GAME_FUCTION = ui.SelectedMenu
   }
 }
 
@@ -140,10 +155,4 @@ func (g *GameMain) Dispose(){
   for _, layer := range(g.gameStartLayers){
     layer.Dispose()
   }
-}
-
-func NewGameMain()*GameMain{
-  var ng *GameMain = new(GameMain)
-  ng.init()
-  return ng 
 }

@@ -17,27 +17,27 @@ var gameManage gamecore.GameManager
 type Game struct {}
 
 func (g *Game) Update() error {
-  switch tool.GAMEMODE{
+  switch tool.GAME_FUCTION{
   case "GAMEMAIN":
     if gameManage != nil{
       gameManage.Dispose()
     }
     gameManage = gamecore.NewGameMain() 
-    tool.GAMEMODE = ""
+    tool.GAME_FUCTION = ""
 
   case "START":
     if gameManage != nil{
       gameManage.Dispose()
     }
     gameManage = gamecore.NewGameStart()
-    tool.GAMEMODE = ""
+    tool.GAME_FUCTION = ""
 
   case "DEV":
     if gameManage != nil{
       gameManage.Dispose()
     }
     gameManage = gamecore.NewLevelEditor() 
-    tool.GAMEMODE = ""
+    tool.GAME_FUCTION = ""
 
   case "EXIT":
     os.Exit(0)

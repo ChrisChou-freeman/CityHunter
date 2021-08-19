@@ -44,7 +44,7 @@ type LevelEditor struct{
 }
 
 func NewLevelEditor() *LevelEditor{
-  var le *LevelEditor = new(LevelEditor)
+  le := new(LevelEditor)
   le.init()
   return le
 }
@@ -252,7 +252,7 @@ func (l *LevelEditor)handleLayerScroll(mod string){
 
 func (l *LevelEditor)keyEvent(){
   if l.keymap.IsKeyBackPressed(){
-    tool.GAMEMODE = "GAMEMAIN"
+    tool.GAME_FUCTION = "GAMEMAIN"
   }
 
   if l.keymap.IsKeyRightHoldPressed(){

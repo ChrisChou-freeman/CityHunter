@@ -1,4 +1,4 @@
-package gamecore 
+package ui 
 
 import(
   "log"
@@ -23,7 +23,7 @@ type Menu struct{
   fontType font.Face
 }
 
-var selectedMenu string
+var SelectedMenu string
 
 func (m *Menu)init(){
   m.loadContent()
@@ -69,16 +69,16 @@ func (m *Menu)containPoint(x, y int) bool{
 func (m *Menu)onClick(){
  var x, y int = ebiten.CursorPosition()
   if m.containPoint(x, y) {
-    selectedMenu = m.MenuName
+    SelectedMenu = m.MenuName
     if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft){
       input.MouseLeftInUsing = true
       switch m.MenuName{
         case "EXIT":
-          tool.GAMEMODE = "EXIT"
+          tool.GAME_FUCTION = "EXIT"
         case "DEV":
-          tool.GAMEMODE = "DEV"
+          tool.GAME_FUCTION = "DEV"
         case "START":
-          tool.GAMEMODE = "START"
+          tool.GAME_FUCTION = "START"
       }
     }
   }
@@ -89,8 +89,8 @@ func (m *Menu)Update(){
 }
 
 func (m *Menu)Draw(scrren *ebiten.Image){
-  var menuColor color.RGBA = m.MenuColor
-  if m.MenuName == selectedMenu{
+  menuColor := m.MenuColor
+  if m.MenuName == SelectedMenu{
     menuColor = tool.COLOR_YELLOW
   }
   text.Draw(scrren, m.MenuName, m.fontType, m.Position.X, m.Position.Y, menuColor)

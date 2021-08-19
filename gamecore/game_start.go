@@ -5,6 +5,7 @@ import(
   "io"
   "log"
   "fmt"
+  "image"
   "errors"
   "encoding/json"
 
@@ -14,6 +15,7 @@ import(
   "github.com/ChrisChou-freeman/CityHunter/gamecore/input"
   "github.com/ChrisChou-freeman/CityHunter/gamecore/texture"
   "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/player"
 )
 
 type GameStart struct{
@@ -21,7 +23,7 @@ type GameStart struct{
   tilesList []*texture.Sprite
   levelData *tool.LevelData
   keymap *input.KeyMap
-  player *texture.Sprite
+  player *player.Player
   enemys []*texture.Sprite
   levelNumber int
   layerRepeat int
@@ -109,11 +111,11 @@ func(gs *GameStart)initialTilesByLevelData(){
       log.Fatal(err)
     }
     newSprite := &texture.Sprite{Texture: newTexture, Position: &tool.FPoint{X: float64(tileInfo["X"]), Y: float64(tileInfo["Y"])}}
-    switch tileInfo["tile"]{
-    case tool.PLAYERTILE:
-      gs.player = newSprite
-    case tool.ENEMYTILE:
-      gs.enemys = append(gs.enemys, newSprite)
+    switch {
+    case tileInfo["tile"] == tool.PLAYERTILE:
+      gs.player = player.NewPlayer(&image.Point{X: tileInfo["X"], Y: tileInfo["Y"]})
+    case tool.SliceContainItem(tool.ENEMYTILES, tileInfo["tile"]) != -1:
+      gs.enemys = nil 
     default:
       gs.tilesList = append(gs.tilesList, newSprite)
     }
@@ -148,5 +150,6 @@ func(gs *GameStart)Dispose(){
   for _, s := range(gs.tilesList){
     s.Dispose()
   }
+  // gs.player.Dispose()
 }
 
