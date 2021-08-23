@@ -30,6 +30,7 @@ type GameStart struct{
   layerNumber int
   currentLevel int
   surfaceLayerWidth int
+  scoroll float64
 }
 
 func NewGameStart() *GameStart{
@@ -46,7 +47,6 @@ func(gs *GameStart)init(){
 }
 
 func (gs *GameStart)loadLayers() {
-  // var lastLayerWidth int
   for i := 0; i<gs.layerRepeat; i++{
     for j := 0; j<gs.layerNumber; j++{
       var layerPath string = fmt.Sprintf("content/gamestart/layer%v_0.png", j) 
@@ -113,7 +113,7 @@ func(gs *GameStart)initialTilesByLevelData(){
     newSprite := &texture.Sprite{Texture: newTexture, Position: &tool.FPoint{X: float64(tileInfo["X"]), Y: float64(tileInfo["Y"])}}
     switch {
     case tileInfo["tile"] == tool.PLAYERTILE:
-      gs.player = player.NewPlayer(&image.Point{X: tileInfo["X"], Y: tileInfo["Y"]})
+      gs.player = player.NewPlayer(&image.Point{X: tileInfo["X"], Y: tileInfo["Y"] - 10}, gs.levelData)
     case tool.SliceContainItem(tool.ENEMYTILES, tileInfo["tile"]) != -1:
       gs.enemys = nil 
     default:
@@ -131,7 +131,15 @@ func(gs *GameStart)loadContent(){
   gs.initialTilesByLevelData()
 }
 
+func (gs *GameStart)keyEvent(){
+  if gs.keymap.IsKeyBackPressed(){
+    tool.GAME_FUCTION = "GAMEMAIN"
+  }
+}
+
 func(gs *GameStart)Update(){
+  gs.keyEvent()
+  gs.player.Update()
 }
 
 func(gs *GameStart)Draw(screen *ebiten.Image){
@@ -141,6 +149,7 @@ func(gs *GameStart)Draw(screen *ebiten.Image){
   for _, s := range(gs.tilesList){
     s.Draw(screen)
   }
+  gs.player.Draw(screen)
 }
 
 func(gs *GameStart)Dispose(){
@@ -150,6 +159,6 @@ func(gs *GameStart)Dispose(){
   for _, s := range(gs.tilesList){
     s.Dispose()
   }
-  // gs.player.Dispose()
+  gs.player.Dispose()
 }
 

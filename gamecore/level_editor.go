@@ -32,8 +32,8 @@ type LevelEditor struct{
   levelEditorLayerNumber  int
   levelEditorLayerRepeat int
   layerScrollSpeed int
-  tileWidth int
-  tileHeight int
+  // tileWidth int
+  // tileHeight int
   inSelectTile int
   srufaceLayerWidth int
   tileColNumber int
@@ -54,8 +54,8 @@ func (l *LevelEditor)init(){
   l.levelEditorLayerRepeat = 2
   l.layerScrollSpeed = 8
   l.keymap = new(input.KeyMap)
-  l.tileWidth = 32
-  l.tileHeight = 32
+  // tool.TILEWIDTH = 32
+  // tool.TILEHEIGHT = 32
   l.showGrids = false
   l.showTilesContainer = false
   l.menuContainer = tool.FRectangle{Min:tool.FPoint{X:0, Y:0}, Max:tool.FPoint{X:float64(tool.SCRREN_ORI_WIDTH), Y:100}} 
@@ -86,7 +86,7 @@ func (l *LevelEditor)loadLevelEditorLayers() int {
 }
 
 func (l *LevelEditor)LoadGridLine(){
-  for i:=0; i<tool.SCRREN_ORI_HEIGHT; i+=l.tileHeight{
+  for i:=0; i<tool.SCRREN_ORI_HEIGHT; i+=tool.TILEHEIGHT{
     newLine := &tool.FRectangle{
       Min:tool.FPoint{X: 0, Y: float64(i)},
       Max:tool.FPoint{X: float64(l.srufaceLayerWidth * l.levelEditorLayerRepeat),
@@ -94,7 +94,7 @@ func (l *LevelEditor)LoadGridLine(){
     }
     l.lineList = append(l.lineList, newLine)
   }
-  for i:=0; i<l.srufaceLayerWidth * l.levelEditorLayerRepeat; i+=l.tileWidth{
+  for i:=0; i<l.srufaceLayerWidth * l.levelEditorLayerRepeat; i+=tool.TILEWIDTH{
     newLine := &tool.FRectangle{Min:tool.FPoint{X: float64(i), Y: 0}, Max:tool.FPoint{X: float64(i), Y: float64(tool.SCRREN_ORI_HEIGHT)}}
     l.lineList = append(l.lineList, newLine)
   }
@@ -117,7 +117,7 @@ func(l *LevelEditor)loadTilesButton(){
   }
 
   tileWidthSpace := 10
-  cols := tool.SCRREN_ORI_WIDTH / (l.tileWidth + tileWidthSpace)
+  cols := tool.SCRREN_ORI_WIDTH / (tool.TILEWIDTH+ tileWidthSpace)
   row := len(files) / cols
   if len(files) % cols > 0 {
     row ++
@@ -131,7 +131,7 @@ func(l *LevelEditor)loadTilesButton(){
     if err != nil {
       log.Fatal(err)
     }
-    newPosition := &tool.FPoint{X: float64(currentCol * l.tileWidth + currentCol* tileWidthSpace), Y: float64(currentRow * l.tileHeight)}
+    newPosition := &tool.FPoint{X: float64(currentCol * tool.TILEWIDTH+ currentCol* tileWidthSpace), Y: float64(currentRow * tool.TILEHEIGHT)}
     currentCol++
     if currentCol == cols{
       currentRow ++
@@ -143,11 +143,11 @@ func(l *LevelEditor)loadTilesButton(){
 }
 
 func(l *LevelEditor)initialLevelData(){
-  cols := l.srufaceLayerWidth * l.levelEditorLayerRepeat / l.tileWidth
-  rows := tool.SCRREN_ORI_HEIGHT / l.tileHeight
+  cols := l.srufaceLayerWidth * l.levelEditorLayerRepeat / tool.TILEWIDTH 
+  rows := tool.SCRREN_ORI_HEIGHT / tool.TILEHEIGHT 
   for row := 0; row < rows; row++{
     for col := 0; col < cols; col ++{
-      newMap := map[string]int{"X": col * l.tileWidth, "Y": row * l.tileHeight, "tile": -1}
+      newMap := map[string]int{"X": col * tool.TILEWIDTH, "Y": row * tool.TILEHEIGHT, "tile": -1}
       l.levelData.TileData = append(l.levelData.TileData, newMap)
     }
   }
@@ -201,7 +201,7 @@ func(l *LevelEditor)saveLevelData(){
 
 func (l *LevelEditor)LoadContent(){
   l.srufaceLayerWidth = l.loadLevelEditorLayers()
-  l.tileColNumber = l.srufaceLayerWidth * l.levelEditorLayerRepeat / l.tileWidth
+  l.tileColNumber = l.srufaceLayerWidth * l.levelEditorLayerRepeat / tool.TILEWIDTH
   l.LoadGridLine()
   l.loadSurfaceButton()
   l.loadTilesButton()
@@ -329,13 +329,13 @@ func (l *LevelEditor)mouseEvent(){
   }
   if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !input.MouseLeftInUsing && l.getGridArea(){
     x -= int(l.globelScroll)
-    x/=l.tileWidth
-    y/=l.tileHeight
+    x/=tool.TILEWIDTH
+    y/=tool.TILEHEIGHT
     l.levelData.TileData[y*l.tileColNumber+x]["tile"] = l.inSelectTile
   }else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) && !input.MouseLeftInUsing && l.getGridArea(){
     x -= int(l.globelScroll)
-    x/=l.tileWidth
-    y/=l.tileHeight
+    x/=tool.TILEWIDTH
+    y/=tool.TILEHEIGHT
     l.levelData.TileData[y*l.tileColNumber+x]["tile"] = -1
   }
 }

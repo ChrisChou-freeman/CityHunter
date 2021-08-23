@@ -13,6 +13,7 @@ type FRectangle struct{
 type LevelData struct{
   TileData []map[string]int
   CollisionData map[string][]int
+  LevelInfo map[string]int
 }
 
 func NewLevelData()*LevelData{
