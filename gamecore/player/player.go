@@ -25,6 +25,9 @@ type Player struct{
   action string
   gravity int
   speed int
+  isJumping bool
+  jumpForce int
+  counter int
 }
 
 func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player{
@@ -35,8 +38,9 @@ func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player{
 
 func(p *Player)init(position *image.Point, levelData *tool.LevelData){
   p.position = position
-  p.gravity = 3
-  p.speed = 2
+  p.gravity = 6
+  p.speed = 3
+  p.jumpForce = 80
   p.vector = &image.Point{}
   p.action = "idle"
   p.levelData = levelData
@@ -60,28 +64,62 @@ func(p *Player)loadContent(){
   }
 }
 
-func(p *Player)keyEvent(){ 
+func(p *Player)keyEvent(){
+  if p.keymap.IsKeyLeftHoldPressed(){
+    p.action = "moveLeft"
+  }else if p.keymap.IsKeyRightHoldPressed(){
+    p.action = "moveRight"
+  }else{
+    p.action = "idle"
+  }
+
+  if p.keymap.IsKeyJumpPressed() && p.isOnGround(){
+    p.isJumping = true
+  }
 }
 
-func(p *Player)gravitySim(){
-  tool.CollisionDetect(p.idle.GetRec(), p.levelData, p.vector, p.position)
+func(p *Player)isOnGround()bool{
+  return p.vector.Y == 0
 }
 
 func(p *Player)motivation(){
   switch p.action {
   case "idle":
     p.vector.Y = p.gravity
+    p.vector.X = 0
   case "moveRight":
     p.vector.X = p.speed
+    p.vector.Y = p.gravity
   case "moveLeft":
     p.vector.X = -p.speed
+    p.vector.Y = p.gravity
+  }
+
+  if p.isJumping{
+    p.vector.Y = -p.speed * 2
+  }
+
+}
+
+func(p *Player)move(){
+  tool.CollisionDetect(p.idle.GetRec(), p.levelData, p.vector, p.position, p.gravity)
+  p.position.X += p.vector.X
+  p.position.Y += p.vector.Y
+  if p.vector.Y < 0 {
+    p.counter -= p.vector.Y
+    if p.counter >= p.jumpForce{
+      p.isJumping = false
+      p.vector.Y = p.speed
+      p.counter = 0
+    }
   }
 }
 
 func(p *Player)Update(){
   p.idle.Update(p.position)
+  p.keyEvent()
   p.motivation()
-  p.gravitySim()
+  p.move()
 }
 
 func(p *Player)Draw(screen *ebiten.Image){

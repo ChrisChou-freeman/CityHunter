@@ -47,11 +47,18 @@ func(k *KeyMap)IsKeyRightHoldPressed()bool{
   return ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) 
 }
 
+// key jump
+func(k *KeyMap)IsKeyJumpPressed()bool{
+  return inpututil.IsKeyJustPressed(ebiten.KeyK)
+}
+
 // mouse left
 func(k *KeyMap)IsMouseLeftKeyPressed()bool{
   return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 }
 
+// mouse right
 func(k *KeyMap)IsMouseRightKeyPressed()bool{
   return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight)
 }
+

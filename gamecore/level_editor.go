@@ -32,8 +32,6 @@ type LevelEditor struct{
   levelEditorLayerNumber  int
   levelEditorLayerRepeat int
   layerScrollSpeed int
-  // tileWidth int
-  // tileHeight int
   inSelectTile int
   srufaceLayerWidth int
   tileColNumber int
@@ -54,8 +52,6 @@ func (l *LevelEditor)init(){
   l.levelEditorLayerRepeat = 2
   l.layerScrollSpeed = 8
   l.keymap = new(input.KeyMap)
-  // tool.TILEWIDTH = 32
-  // tool.TILEHEIGHT = 32
   l.showGrids = false
   l.showTilesContainer = false
   l.menuContainer = tool.FRectangle{Min:tool.FPoint{X:0, Y:0}, Max:tool.FPoint{X:float64(tool.SCRREN_ORI_WIDTH), Y:100}} 
@@ -209,6 +205,8 @@ func (l *LevelEditor)LoadContent(){
   if err != nil{
     log.Fatal(err)
   }
+  l.levelData.LevelInfo["tileColNumber"] = l.tileColNumber
+  l.levelData.LevelInfo["tileRowNumber"] = int(tool.SCRREN_HEIGHT) / tool.TILEHEIGHT
 }
 
 func (l *LevelEditor)handleLayerScroll(mod string){

@@ -33,10 +33,11 @@ func(as *AnimationSprite)init(texture *ebiten.Image, framWidth int, framHeight i
 }
 
 func(s *AnimationSprite)GetRec() image.Rectangle{
-  width, height := s.texture.Size()
+  // width, height := s.texture.Size()
+
   rec := image.Rectangle{
     Min:image.Point{int(s.position.X), int(s.position.Y)},
-    Max:image.Point{int(s.position.X) + width, int(s.position.Y) + height},
+    Max:image.Point{int(s.position.X) + s.framWidth, int(s.position.Y) + s.framHeight},
   }
   return rec 
 }
