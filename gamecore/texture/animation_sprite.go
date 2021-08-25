@@ -1,9 +1,8 @@
 package texture 
 
 import(
-
-  "image"
   // "fmt"
+  "image"
 
   "github.com/hajimehoshi/ebiten/v2"
 )
@@ -16,6 +15,9 @@ type AnimationSprite struct{
   framHeight int
   currentFrame int
   count int
+  loop bool
+  AnimationPlayEnd bool
+  Flip bool
 }
 
 func NewAnimationSprite(texture *ebiten.Image, framWidth int, framHeight int) *AnimationSprite{
@@ -28,29 +30,50 @@ func(as *AnimationSprite)init(texture *ebiten.Image, framWidth int, framHeight i
   as.texture = texture
   as.framWidth = framWidth
   as.framHeight = framHeight
-  textWidth, _ := texture.Size()
-  as.framNum = textWidth / framWidth
+  textureWidth, _ := texture.Size()
+  as.framNum = textureWidth / framWidth
 }
 
-func(s *AnimationSprite)GetRec() image.Rectangle{
-  // width, height := s.texture.Size()
-
+func(as *AnimationSprite)GetRec() image.Rectangle{
   rec := image.Rectangle{
-    Min:image.Point{int(s.position.X), int(s.position.Y)},
-    Max:image.Point{int(s.position.X) + s.framWidth, int(s.position.Y) + s.framHeight},
+    Min:image.Point{int(as.position.X), int(as.position.Y)},
+    Max:image.Point{int(as.position.X) + as.framWidth, int(as.position.Y) + as.framHeight},
   }
   return rec 
 }
 
+func(as *AnimationSprite)Play(){
+  as.loop = true 
+}
+
+func(as *AnimationSprite)PlayOnce(){
+  as.loop = false
+  as.currentFrame = 0
+  as.count = 0
+}
+
 func(as *AnimationSprite)Update(position *image.Point){
   as.position = position
-  as.count++
+  if as.loop{
+    as.count++
+  }else{
+    if as.currentFrame < as.framNum - 1{
+      as.count++
+    }else{
+      as.AnimationPlayEnd = true
+    }
+  }
   as.currentFrame = (as.count/6) % as.framNum 
 }
 
 func(as *AnimationSprite)Draw(screen *ebiten.Image){
   iop := new(ebiten.DrawImageOptions)
-  iop.GeoM.Translate(float64(as.position.X), float64(as.position.Y))
+  drawPositonX := as.position.X
+  if as.Flip{
+    iop.GeoM.Scale(-1, 1)
+    drawPositonX += as.framWidth
+  }
+  iop.GeoM.Translate(float64(drawPositonX), float64(as.position.Y))
   framX := as.currentFrame * as.framWidth
   screen.DrawImage(as.texture.SubImage(image.Rect(framX, 0, framX + as.framWidth, as.framHeight)).(*ebiten.Image), iop)
 }

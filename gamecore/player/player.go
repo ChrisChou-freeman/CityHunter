@@ -1,7 +1,7 @@
 package player 
 
 import(
-  // "fmt"
+  "fmt"
   "log"
   "image"
 
@@ -18,6 +18,7 @@ type Player struct{
   run *texture.AnimationSprite
   death *texture.AnimationSprite
   jump *texture.AnimationSprite
+  currentAnimation *texture.AnimationSprite
   position *image.Point
   vector *image.Point 
   levelData *tool.LevelData
@@ -26,6 +27,8 @@ type Player struct{
   gravity int
   speed int
   isJumping bool
+  isFulling bool
+  flip bool
   jumpForce int
   counter int
 }
@@ -37,10 +40,11 @@ func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player{
 }
 
 func(p *Player)init(position *image.Point, levelData *tool.LevelData){
+  fmt.Println(p.currentAnimation)
   p.position = position
   p.gravity = 6
-  p.speed = 3
-  p.jumpForce = 80
+  p.speed = 2
+  p.jumpForce = 60
   p.vector = &image.Point{}
   p.action = "idle"
   p.levelData = levelData
@@ -53,7 +57,25 @@ func(p *Player)loadAnimation() error {
     if err != nil{
       return err
     }
-    p.idle = texture.NewAnimationSprite(idleT, 28,36)
+    p.idle = texture.NewAnimationSprite(idleT, 28, 36)
+
+    deathT, _, err := ebitenutil.NewImageFromFile("content/player/death/sheet.png")
+    if err != nil{
+      return err
+    }
+    p.death = texture.NewAnimationSprite(deathT, 35, 36)
+
+    jumpT, _, err := ebitenutil.NewImageFromFile("content/player/jump/0.png")
+    if err != nil{
+      return err
+    }
+    p.jump = texture.NewAnimationSprite(jumpT, 28, 36)
+
+    runT, _, err := ebitenutil.NewImageFromFile("content/player/run/sheet.png")
+    if err != nil{
+      return err
+    }
+    p.run = texture.NewAnimationSprite(runT, 28, 36)
     return nil
 }
 
@@ -65,12 +87,15 @@ func(p *Player)loadContent(){
 }
 
 func(p *Player)keyEvent(){
+  p.action = "idle"
   if p.keymap.IsKeyLeftHoldPressed(){
     p.action = "moveLeft"
-  }else if p.keymap.IsKeyRightHoldPressed(){
+    p.flip = true
+  }
+
+  if p.keymap.IsKeyRightHoldPressed(){
     p.action = "moveRight"
-  }else{
-    p.action = "idle"
+    p.flip = false 
   }
 
   if p.keymap.IsKeyJumpPressed() && p.isOnGround(){
@@ -94,38 +119,70 @@ func(p *Player)motivation(){
     p.vector.X = -p.speed
     p.vector.Y = p.gravity
   }
-
-  if p.isJumping{
+  if p.isJumping && !p.isFulling{
     p.vector.Y = -p.speed * 2
   }
-
 }
 
 func(p *Player)move(){
-  tool.CollisionDetect(p.idle.GetRec(), p.levelData, p.vector, p.position, p.gravity)
+  if p.currentAnimation == nil{
+    return
+  }
+  tool.CollisionDetect(p.currentAnimation.GetRec(), p.levelData, p.vector, p.position, p.gravity)
   p.position.X += p.vector.X
   p.position.Y += p.vector.Y
-  if p.vector.Y < 0 {
+  if p.isJumping {
     p.counter -= p.vector.Y
     if p.counter >= p.jumpForce{
-      p.isJumping = false
       p.vector.Y = p.speed
+      p.isJumping = false
+      p.isFulling = true
       p.counter = 0
     }
   }
+  if p.vector.Y ==0 {
+    p.isFulling = false
+  }
+}
+
+func(p *Player)animationControl(){
+  if p.isJumping || p.isFulling{
+    if p.currentAnimation == p.jump{
+      return
+    }
+    p.currentAnimation = p.jump
+    p.currentAnimation.PlayOnce()
+  }else{    
+    switch p.action{
+    case "idle":
+      p.currentAnimation = p.idle
+      p.currentAnimation.Play()
+    case "moveRight":
+      p.currentAnimation = p.run
+      p.currentAnimation.Play()
+    case "moveLeft":
+      p.currentAnimation = p.run
+      p.currentAnimation.Play()
+    }
+  }
+  p.currentAnimation.Flip = p.flip
 }
 
 func(p *Player)Update(){
-  p.idle.Update(p.position)
+  p.animationControl()
+  p.currentAnimation.Update(p.position)
   p.keyEvent()
   p.motivation()
   p.move()
 }
 
 func(p *Player)Draw(screen *ebiten.Image){
-  p.idle.Draw(screen)
+  p.currentAnimation.Draw(screen)
 }
 
 func(p *Player)Dispose(){
   p.idle.Dispose()
+  p.death.Dispose()
+  p.run.Dispose()
+  p.jump.Dispose()
 }
