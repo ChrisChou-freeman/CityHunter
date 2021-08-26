@@ -114,7 +114,7 @@ func(gs *GameStart)initialTilesByLevelData(){
     switch {
     case tileInfo["tile"] == tool.PLAYERTILE:
       gs.player = player.NewPlayer(&image.Point{X: tileInfo["X"], Y: tileInfo["Y"] - 10}, gs.levelData)
-    case tool.SliceContainItem(tool.ENEMYTILES, tileInfo["tile"]) != -1:
+    case tool.SliceIndexOf(tool.ENEMYTILES, tileInfo["tile"]) != -1:
       gs.enemys = nil 
     default:
       gs.tilesList = append(gs.tilesList, newSprite)
@@ -146,10 +146,10 @@ func(gs *GameStart)Draw(screen *ebiten.Image){
   for _, s := range(gs.layers){
     s.Draw(screen)
   }
+  gs.player.Draw(screen)
   for _, s := range(gs.tilesList){
     s.Draw(screen)
   }
-  gs.player.Draw(screen)
 }
 
 func(gs *GameStart)Dispose(){

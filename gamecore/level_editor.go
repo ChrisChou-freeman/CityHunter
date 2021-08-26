@@ -206,7 +206,7 @@ func (l *LevelEditor)LoadContent(){
     log.Fatal(err)
   }
   l.levelData.LevelInfo["tileColNumber"] = l.tileColNumber
-  l.levelData.LevelInfo["tileRowNumber"] = int(tool.SCRREN_HEIGHT) / tool.TILEHEIGHT
+  l.levelData.LevelInfo["tileRowNumber"] = int(tool.SCRREN_ORI_HEIGHT) / tool.TILEHEIGHT
 }
 
 func (l *LevelEditor)handleLayerScroll(mod string){
@@ -306,7 +306,7 @@ func(l *LevelEditor)tileSelectClick(button *ui.Button){
 func(l *LevelEditor)tileCollisionSetClick(button *ui.Button){
   l.tileSelectClick(button)
   if fullCollisionList, ok := l.levelData.CollisionData["full"]; ok{
-    if index := tool.SliceContainItem(fullCollisionList, l.inSelectTile); index != -1{
+    if index := tool.SliceIndexOf(fullCollisionList, l.inSelectTile); index != -1{
       fullCollisionList = tool.SliceRemove(fullCollisionList, index)
       l.levelData.CollisionData["full"] = fullCollisionList
     }else{
@@ -316,7 +316,6 @@ func(l *LevelEditor)tileCollisionSetClick(button *ui.Button){
   }else{
       l.levelData.CollisionData["full"] = []int{l.inSelectTile} 
   }
-  fmt.Println(l.levelData.CollisionData)
 }
 
 func (l *LevelEditor)mouseEvent(){
@@ -395,7 +394,7 @@ func(l *LevelEditor)DrawButton(screen *ebiten.Image){
 
 func(l *LevelEditor)getTileCollisionInfo(tile int)string{
   if fullCollisionList, ok := l.levelData.CollisionData["full"]; ok{
-    if tool.SliceContainItem(fullCollisionList, tile) != -1{
+    if tool.SliceIndexOf(fullCollisionList, tile) != -1{
       return "full"
     }
   }

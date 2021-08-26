@@ -1,7 +1,7 @@
 package player 
 
 import(
-  "fmt"
+  // "fmt"
   "log"
   "image"
 
@@ -40,7 +40,6 @@ func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player{
 }
 
 func(p *Player)init(position *image.Point, levelData *tool.LevelData){
-  fmt.Println(p.currentAnimation)
   p.position = position
   p.gravity = 6
   p.speed = 2
@@ -124,11 +123,11 @@ func(p *Player)motivation(){
   }
 }
 
-func(p *Player)move(){
+func(p *Player)vectorHandle(){
   if p.currentAnimation == nil{
     return
   }
-  tool.CollisionDetect(p.currentAnimation.GetRec(), p.levelData, p.vector, p.position, p.gravity)
+  tool.CollisionDetect(p.currentAnimation.GetRec(), p.levelData, p.vector, p.position)
   p.position.X += p.vector.X
   p.position.Y += p.vector.Y
   if p.isJumping {
@@ -169,11 +168,11 @@ func(p *Player)animationControl(){
 }
 
 func(p *Player)Update(){
-  p.animationControl()
-  p.currentAnimation.Update(p.position)
   p.keyEvent()
   p.motivation()
-  p.move()
+  p.vectorHandle()
+  p.animationControl()
+  p.currentAnimation.Update(p.position)
 }
 
 func(p *Player)Draw(screen *ebiten.Image){
