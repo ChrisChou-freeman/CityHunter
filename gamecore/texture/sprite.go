@@ -10,8 +10,6 @@ import(
   "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
 )
 
-var InSelectSprite string
-
 type Sprite struct{
   Texture *ebiten.Image
   Position *tool.FPoint
@@ -50,12 +48,6 @@ func(s *Sprite)DrawEdge(screen *ebiten.Image, top bool, left bool, bottom bool, 
     }
 }
 
-func(s *Sprite)DrawSelectedBox(screen *ebiten.Image){
-  if s.SpriteName == InSelectSprite && s.SpriteName != ""{
-    s.DrawEdge(screen, true, true, true, true, tool.COLOR_YELLOW)
-  }
-}
-
 func(s *Sprite)DrawCollisionVisual(screen *ebiten.Image){
   if s.CollisionInfo == ""{
     return
@@ -70,7 +62,6 @@ func(s *Sprite)Draw(screen *ebiten.Image){
   var iop *ebiten.DrawImageOptions = new(ebiten.DrawImageOptions)
   iop.GeoM.Translate(s.Position.X, s.Position.Y)
   screen.DrawImage(s.Texture, iop)
-  s.DrawSelectedBox(screen)
 }
 
 func(s *Sprite)Dispose(){

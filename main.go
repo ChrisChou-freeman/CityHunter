@@ -46,12 +46,12 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
+func (g *Game)Draw(screen *ebiten.Image) {
   gameManage.Draw(screen)
   ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (g *Game)Layout(outsideWidth, outsideHeight int) (int, int) {
 	return tool.SCRREN_ORI_WIDTH, tool.SCRREN_ORI_HEIGHT 
 }
 

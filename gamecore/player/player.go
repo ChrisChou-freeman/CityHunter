@@ -1,7 +1,6 @@
 package player 
 
 import(
-  // "fmt"
   "log"
   "image"
 
@@ -31,6 +30,9 @@ type Player struct{
   flip bool
   jumpForce int
   counter int
+  
+  bulletList []texture.MotivationSprite
+  bulletTexture *ebiten.Image
 }
 
 func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player{
@@ -75,6 +77,13 @@ func(p *Player)loadAnimation() error {
       return err
     }
     p.run = texture.NewAnimationSprite(runT, 28, 36)
+
+    bulletT, _, err := ebitenutil.NewImageFromFile("content/items/bullet.png")
+    if err != nil{
+      return nil
+    }
+    p.bulletTexture = bulletT
+
     return nil
 }
 
@@ -184,4 +193,5 @@ func(p *Player)Dispose(){
   p.death.Dispose()
   p.run.Dispose()
   p.jump.Dispose()
+  p.bulletTexture.Dispose()
 }

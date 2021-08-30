@@ -25,6 +25,12 @@ type Menu struct{
 
 var SelectedMenu string
 
+func NewMenu()*Menu{
+  var m *Menu = new(Menu)
+  m.init()
+  return m
+}
+
 func (m *Menu)init(){
   m.loadContent()
 }
@@ -94,10 +100,4 @@ func (m *Menu)Draw(scrren *ebiten.Image){
     menuColor = tool.COLOR_YELLOW
   }
   text.Draw(scrren, m.MenuName, m.fontType, m.Position.X, m.Position.Y, menuColor)
-}
-
-func NewMenu()*Menu{
-  var m *Menu = new(Menu)
-  m.init()
-  return m
 }

@@ -36,4 +36,3 @@ func Clamp(n, a, b float64) float64 {
 func getLevalDataIndex(position image.Point, levelData *LevelData) int {
   return position.Y * levelData.LevelInfo["tileColNumber"] + position.X
 }
-

@@ -5,6 +5,11 @@ type FPoint struct{
   Y float64
 }
 
+func(fp FPoint)Add(fpoint FPoint){
+  fp.X += fpoint.X
+  fp.Y += fpoint.Y
+}
+
 type FRectangle struct{
   Min FPoint
   Max FPoint

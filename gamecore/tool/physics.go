@@ -4,7 +4,6 @@ import(
   "image"
 )
 
-
 func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *image.Point, position *image.Point) {
   borderLessSpritRec := spritRec
   borderLessSpritRec.Min.X += 1 * 4

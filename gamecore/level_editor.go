@@ -294,7 +294,7 @@ func(b *LevelEditor)tileOpenBtnClick(){
 }
 
 func(l *LevelEditor)tileSelectClick(button *ui.Button){
-  texture.InSelectSprite = button.SpriteName
+  ui.InSelectButton = button.SpriteName
   n := strings.Split(button.SpriteName, ".")[0]
   var err error
   l.inSelectTile, err = strconv.Atoi(n)
