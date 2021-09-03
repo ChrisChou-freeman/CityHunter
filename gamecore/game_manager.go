@@ -1,11 +1,11 @@
-package gamecore 
+package gamecore
 
-import(
-  "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type GameManager interface{
-  Update()
-  Draw(scrren *ebiten.Image)
-  Dispose()
+type GameManager interface {
+	Update()
+	Draw(scrren *ebiten.Image)
+	Dispose()
 }

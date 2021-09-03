@@ -1,28 +1,30 @@
-package tool 
+package tool
 
-import(
-  "image/color"
+import (
+	"image/color"
 )
 
 const (
-  SCRREN_ORI_WIDTH = 800
-  SCRREN_ORI_HEIGHT = 480
-  SCRREN_WIDTH = SCRREN_ORI_WIDTH * 1.5
-  SCRREN_HEIGHT  = SCRREN_ORI_HEIGHT * 1.5
-  TILEWIDTH = 32
-  TILEHEIGHT = 32
-  SCRREN_WIDTH_SCAL = float64(SCRREN_ORI_WIDTH) / float64(SCRREN_WIDTH)
-  SCRREN_HEIGHT_SCAL = float64(SCRREN_ORI_HEIGHT) / float64(SCRREN_HEIGHT) 
-  TILES_PATH = "content/tiles/%v.png"
-  PLAYERTILE = 15
+	SCRREN_ORI_WIDTH  int     = 800
+	SCRREN_ORI_HEIGHT int     = 480
+	SCALE             float64 = 1.5
+	SCRREN_WIDTH      int     = int(float64(SCRREN_ORI_WIDTH) * SCALE)
+	SCRREN_HEIGHT     int     = int(float64(SCRREN_ORI_HEIGHT) * SCALE)
+	TILEWIDTH         int     = 32
+	TILEHEIGHT        int     = 32
+	TILES_PATH        string  = "content/tiles/%v.png"
+	PLAYERTILE        int     = 15
+	GAME_MAIN         string  = "Main"
+	GAME_DEVELOPMENT  string  = "Development"
+	GAME_START        string  = "Start"
+	GAME_QUIT         string  = "Quit"
 )
 
 var (
-  COLOR_YELLOW color.RGBA = color.RGBA{255, 255, 1, 255}
-  COLOR_WHITE color.RGBA = color.RGBA{255, 255, 255, 255}
-  COLOR_GREY color.RGBA = color.RGBA{192, 192, 192, 255}
-  COLOR_RED color.RGBA = color.RGBA{240, 52, 52, 255}
-  ENEMYTILES []int = []int{16} 
-  GAME_FUCTION string = "GAMEMAIN"
+	COLOR_YELLOW color.RGBA = color.RGBA{255, 255, 1, 255}
+	COLOR_WHITE  color.RGBA = color.RGBA{255, 255, 255, 255}
+	COLOR_GREY   color.RGBA = color.RGBA{192, 192, 192, 255}
+	COLOR_RED    color.RGBA = color.RGBA{240, 52, 52, 255}
+	ENEMYTILES   []int      = []int{16}
+	GAME_FUCTION string     = "Main"
 )
-
