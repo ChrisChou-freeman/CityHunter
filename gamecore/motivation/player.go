@@ -1,7 +1,7 @@
 package motivation
 
 import (
-	// "fmt"
+	"fmt"
 	"image"
 	"log"
 
@@ -18,6 +18,7 @@ type Player struct {
 	run              *texture.AnimationSprite
 	death            *texture.AnimationSprite
 	jump             *texture.AnimationSprite
+  fulling          *texture.AnimationSprite
 	currentAnimation *texture.AnimationSprite
 	position         *image.Point
 	vector           *image.Point
@@ -33,6 +34,7 @@ type Player struct {
 	counter          int
 	bulletSpeed      int
 	aotuBulletSpeed  int
+  characterColor   string
 	bulletList       []*texture.MotivationSprite
 	bulletTexture    *ebiten.Image
 }
@@ -48,38 +50,45 @@ func (p *Player) init(position *image.Point, levelData *tool.LevelData) {
 	p.gravity = 6
 	p.speed = 2
 	p.jumpForce = 60
-	p.bulletSpeed = 5
+	p.bulletSpeed = 6
 	p.vector = &image.Point{}
 	p.action = "idle"
 	p.levelData = levelData
+  p.characterColor = "black"
 	p.keymap = new(input.KeyMap)
 	p.loadContent()
 }
 
 func (p *Player) loadAnimation() error {
-	idleT, _, err := ebitenutil.NewImageFromFile("content/player/Idle/sheet.png")
+	idleT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/idle.png", p.characterColor))
 	if err != nil {
 		return err
 	}
 	p.idle = texture.NewAnimationSprite(idleT, 28, 36)
 
-	deathT, _, err := ebitenutil.NewImageFromFile("content/player/death/sheet.png")
+	deathT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/death.png", p.characterColor))
 	if err != nil {
 		return err
 	}
 	p.death = texture.NewAnimationSprite(deathT, 35, 36)
 
-	jumpT, _, err := ebitenutil.NewImageFromFile("content/player/jump/0.png")
+	jumpT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/jump.png", p.characterColor))
 	if err != nil {
 		return err
 	}
 	p.jump = texture.NewAnimationSprite(jumpT, 28, 36)
 
-	runT, _, err := ebitenutil.NewImageFromFile("content/player/run/sheet.png")
+	runT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/run.png", p.characterColor))
 	if err != nil {
 		return err
 	}
 	p.run = texture.NewAnimationSprite(runT, 28, 36)
+
+  fullingT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/full.png", p.characterColor))
+  if err != nil {
+    return err
+  }
+  p.fulling = texture.NewAnimationSprite(fullingT, 28, 36) 
 
 	bulletT, _, err := ebitenutil.NewImageFromFile("content/items/bullet.png")
 	if err != nil {
@@ -98,44 +107,46 @@ func (p *Player) loadContent() {
 }
 
 func (p *Player) keyEvent() {
-	p.action = "idle"
+  if !p.isJumping && !p.isFulling{
+    p.action = "idle"
+		p.vector.X = 0
+		p.vector.Y = p.gravity
+  }
+
 	if p.keymap.IsKeyLeftHoldPressed() {
-		p.action = "moveLeft"
+    if p.isJumping {
+      p.action = "jumpLeft"
+    }else if p.isFulling{
+      p.action = "fullLeft"
+    }else{
+      p.action = "moveLeft"
+      p.vector.Y = p.gravity
+    }
+    p.vector.X = -p.speed
 		p.flip = true
 	}
 
 	if p.keymap.IsKeyRightHoldPressed() {
-		p.action = "moveRight"
+    if p.isJumping {
+      p.action = "jumpRight"
+    }else if p.isFulling{
+      p.action = "fullRight"
+    }else{
+      p.action = "moveRight"
+      p.vector.Y = p.gravity
+    }
+    p.vector.X = p.speed
 		p.flip = false
 	}
 
-	if p.keymap.IsKeyJumpPressed() && p.isOnGround() {
+	if p.keymap.IsKeyJumpPressed() && !p.isJumping &&!p.isFulling {
+    p.action = "jump"
+    p.vector.Y = -p.gravity
 		p.isJumping = true
 	}
 
 	if p.keymap.IsKeyAttackPressed() {
-		p.shotBullet()
-	}
-}
-
-func (p *Player) isOnGround() bool {
-	return p.vector.Y == 0
-}
-
-func (p *Player) motivation() {
-	switch p.action {
-	case "idle":
-		p.vector.Y = p.gravity
-		p.vector.X = 0
-	case "moveRight":
-		p.vector.X = p.speed
-		p.vector.Y = p.gravity
-	case "moveLeft":
-		p.vector.X = -p.speed
-		p.vector.Y = p.gravity
-	}
-	if p.isJumping && !p.isFulling {
-		p.vector.Y = -p.speed * 2
+		p.shootBullet()
 	}
 }
 
@@ -144,54 +155,56 @@ func (p *Player) vectorHandle() {
 		return
 	}
 	tool.CollisionDetect(p.currentAnimation.GetRec(), p.levelData, p.vector, p.position)
-	p.position.X += p.vector.X
-	p.position.Y += p.vector.Y
-	if p.isJumping {
-		p.counter -= p.vector.Y
-		if p.counter >= p.jumpForce {
-			p.vector.Y = p.speed
-			p.isJumping = false
-			p.isFulling = true
-			p.counter = 0
-		}
-	}
 	if p.vector.Y == 0 {
 		p.isFulling = false
+	}
+	p.position.X += p.vector.X
+	p.position.Y += p.vector.Y
+  p.counter++
+	if p.isJumping || p.isFulling {
+    if p.counter%3 == 0 && p.vector.Y < p.gravity{
+      p.vector.Y += 1
+    }
+		if p.vector.Y > 0 {
+			p.isJumping = false
+			p.isFulling = true
+		}
 	}
 }
 
 func (p *Player) animationControl() {
-	if p.isJumping || p.isFulling {
-		if p.currentAnimation == p.jump {
-			return
-		}
-		p.currentAnimation = p.jump
-		p.currentAnimation.PlayOnce()
-	} else {
-		switch p.action {
-		case "idle":
-			p.currentAnimation = p.idle
-			p.currentAnimation.Play()
-		case "moveRight":
-			p.currentAnimation = p.run
-			p.currentAnimation.Play()
-		case "moveLeft":
-			p.currentAnimation = p.run
-			p.currentAnimation.Play()
-		}
-	}
+  switch p.action {
+  case "idle":
+    p.currentAnimation = p.idle
+    p.currentAnimation.Play()
+  case "moveRight":
+    p.currentAnimation = p.run
+    p.currentAnimation.Play()
+  case "fullRight":
+    p.currentAnimation = p.fulling
+    p.currentAnimation.PlayOnce()
+  case "moveLeft":
+    p.currentAnimation = p.run
+    p.currentAnimation.Play()
+  case "fullLeft":
+    p.currentAnimation = p.fulling
+    p.currentAnimation.PlayOnce()
+  case "jump":
+    p.currentAnimation = p.jump
+    p.currentAnimation.PlayOnce()
+  }
 	p.currentAnimation.Flip = p.flip
 }
 
-func (p *Player) shotBullet() {
+func (p *Player) shootBullet() {
 	var bulletVectory *image.Point
 	var bulletPosition *tool.FPoint
 	if p.flip {
 		bulletVectory = &image.Point{X: -p.bulletSpeed}
-		bulletPosition = &tool.FPoint{X: float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx()), Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 5)}
+		bulletPosition = &tool.FPoint{X: float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx()), Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2)}
 	} else {
 		bulletVectory = &image.Point{X: p.bulletSpeed}
-		bulletPosition = &tool.FPoint{X: float64(p.position.X + p.idle.GetRec().Dx()), Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 5)}
+		bulletPosition = &tool.FPoint{X: float64(p.position.X + p.idle.GetRec().Dx()), Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2)}
 	}
 	newSprite := &texture.Sprite{
 		Texture:  p.bulletTexture,
@@ -226,7 +239,6 @@ func (p *Player) updateBullet() {
 
 func (p *Player) Update() {
 	p.keyEvent()
-	p.motivation()
 	p.vectorHandle()
 	p.animationControl()
 	p.currentAnimation.Update(p.position)
