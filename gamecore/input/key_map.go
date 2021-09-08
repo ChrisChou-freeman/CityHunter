@@ -57,6 +57,11 @@ func (k *KeyMap) IsKeyAttackPressed() bool {
 	return inpututil.IsKeyJustPressed(ebiten.KeyJ)
 }
 
+// key throw
+func (k *KeyMap) IsKeyThrowPressed() bool {
+  return inpututil.IsKeyJustPressed(ebiten.KeyQ)
+}
+
 // mouse left
 func (k *KeyMap) IsMouseLeftKeyPressed() bool {
 	return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)

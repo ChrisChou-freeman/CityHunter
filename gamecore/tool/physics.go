@@ -1,10 +1,18 @@
 package tool
 
 import (
+  // "fmt"
 	"image"
 )
 
-func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *image.Point, position *image.Point) {
+func CollisionDetect(
+  spritRec image.Rectangle,
+  levelData *LevelData,
+  vector *image.Point,
+  position *image.Point,
+  throwObj bool,
+) bool {
+  hitGround := false
 	borderLessSpritRec := spritRec
 	borderLessSpritRec.Min.X += 1
 	borderLessSpritRec.Max.X -= 1
@@ -23,7 +31,7 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 	rightBottomPosition := image.Point{X: borderLessSpritRec.Max.X/TILEWIDTH + 1, Y: borderLessSpritRec.Max.Y/TILEHEIGHT + 1}
 
 	if bottomMinTilePosition.Y > levelData.LevelInfo["tileRowNumber"]-1 {
-		return
+		return hitGround 
 	}
 
 	topMinTile := -2
@@ -41,7 +49,11 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 	if leftMinTilePostion.X < 0 {
 		if spritRec.Min.X+vector.X < 0 {
 			position.X = 0
-			vector.X = 0
+      if throwObj{
+        vector.X *= -1
+      }else{
+        vector.X = 0
+      }
 		}
 	} else {
 		leftMinTile = levelData.TileData[getLevalDataIndex(leftMinTilePostion, levelData)]["tile"]
@@ -52,7 +64,11 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 	if rightMinTilePostion.X > levelData.LevelInfo["tileColNumber"]-1 {
 		if spritRec.Max.X+vector.X > levelData.LevelInfo["tileColNumber"]*TILEWIDTH {
 			position.X = levelData.LevelInfo["tileColNumber"]*TILEWIDTH - spritRec.Dx()
-			vector.X = 0
+      if throwObj{
+        vector.X *= -1
+      }else{
+        vector.X = 0
+      }
 		}
 	} else {
 		rightMinTile = levelData.TileData[getLevalDataIndex(rightMinTilePostion, levelData)]["tile"]
@@ -69,7 +85,7 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 	if vector.Y < 0 {
 		if SliceContainItemsOr(levelData.CollisionData["full"], []int{topMinTile, topMaxTile}) {
 			if spritRec.Min.Y-1+vector.Y <= topMinTilePosition.Y*TILEHEIGHT+TILEHEIGHT {
-				vector.Y = 0
+				vector.Y *= -1
 			}
 		}
 	}
@@ -80,6 +96,7 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 			if spritRec.Max.Y+1+vector.Y >= bottomMinTilePosition.Y*TILEHEIGHT {
 				position.Y = bottomMinTilePosition.Y*TILEHEIGHT - spritRec.Dy()
 				vector.Y = 0
+        hitGround = true
 			}
 		}
 	}
@@ -90,7 +107,11 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 			if spritRec.Min.X-1+vector.X <= leftBottomPosition.X*TILEWIDTH+TILEWIDTH &&
 				spritRec.Max.Y+1+vector.Y >= leftBottomPosition.Y*TILEHEIGHT {
 				position.X = leftBottomPosition.X*TILEWIDTH + TILEWIDTH
-				vector.X = 0
+        if throwObj && vector.Y != 0 {
+          vector.X *= -1
+        }else{
+          vector.X = 0
+        }
 			}
 		}
 	}
@@ -100,7 +121,11 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 		if SliceContainItemsOr(levelData.CollisionData["full"], []int{leftMinTile, leftMaxTile}) {
 			if spritRec.Min.X-1+vector.X <= leftMinTilePostion.X*TILEWIDTH+TILEWIDTH {
 				position.X = leftMinTilePostion.X*TILEWIDTH + TILEWIDTH
-				vector.X = 0
+        if throwObj && vector.Y != 0 {
+          vector.X *= -1
+        }else{
+          vector.X = 0
+        }
 			}
 		}
 	}
@@ -111,7 +136,11 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 			if spritRec.Max.X+1+vector.X >= rightBottomPosition.X*TILEWIDTH &&
 				spritRec.Max.Y+1+vector.Y >= rightBottomPosition.Y*TILEHEIGHT {
 				position.X = leftBottomPosition.X*TILEWIDTH + TILEWIDTH
-				vector.X = 0
+        if throwObj && vector.Y != 0 {
+          vector.X *= -1
+        }else{
+          vector.X = 0
+        }
 			}
 		}
 	}
@@ -121,8 +150,14 @@ func CollisionDetect(spritRec image.Rectangle, levelData *LevelData, vector *ima
 		if SliceContainItemsOr(levelData.CollisionData["full"], []int{rightMinTile, rightMaxTile}) {
 			if spritRec.Max.X+1+vector.X >= rightMinTilePostion.X*TILEWIDTH {
 				position.X = rightMinTilePostion.X*TILEWIDTH - spritRec.Dx()
-				vector.X = 0
+        if throwObj && vector.Y != 0 {
+          vector.X *= -1
+        }else{
+          vector.X = 0
+        }
 			}
 		}
 	}
+
+  return hitGround 
 }
