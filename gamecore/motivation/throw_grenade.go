@@ -1,7 +1,7 @@
 package motivation 
 
 import(
-  "fmt"
+  // "fmt"
   "math"
   "log"
   "image"
@@ -9,6 +9,7 @@ import(
   "github.com/hajimehoshi/ebiten/v2"
   "github.com/hajimehoshi/ebiten/v2/ebitenutil"
   "github.com/ChrisChou-freeman/CityHunter/gamecore/tool"
+  "github.com/ChrisChou-freeman/CityHunter/gamecore/vex"
 )
 
 type ThrowGrenade struct{
@@ -27,6 +28,9 @@ type ThrowGrenade struct{
   rotateSpeed int
   rebound int
   flip bool
+  exploding bool
+  explode bool
+  explotion *vex.Explode
 }
 
 func NewThrowGrenade(position *image.Point, levelData *tool.LevelData, flip bool) *ThrowGrenade {
@@ -69,6 +73,14 @@ func (tg *ThrowGrenade) getRec() image.Rectangle {
   )
 }
 
+func (tg *ThrowGrenade) grenadeExplode(){
+  if tg.exploding || tg.explode{
+    return
+  }
+  tg.exploding = true
+  tg.explotion = vex.NewExplode(tg.postion)
+}
+
 func (tg *ThrowGrenade) throw(){
   tg.counter ++
   tg.vector.Y = -tg.force + tg.gravity
@@ -89,8 +101,10 @@ func (tg *ThrowGrenade) throw(){
   if tg.force > 0 && tg.counter%tg.speed == 0{
     tg.force --
   }
-  fmt.Println(tg.force)
-  if tg.hitGround && tg.postion.Y + tg.vector.Y == tg.ground.Y {
+  if tg.hitGround && tg.postion.Y + tg.vector.Y >= tg.ground.Y {
+    if tg.force == 0 && tg.postion.Y == tg.ground.Y{
+      tg.grenadeExplode()
+    }
     return
   }
   newPostion := tg.postion.Add(*tg.vector)
@@ -98,6 +112,14 @@ func (tg *ThrowGrenade) throw(){
 }
 
 func (tg *ThrowGrenade) Update() {
+  if tg.exploding{
+    if tg.explotion != nil && !tg.explotion.IsDown(){
+      tg.explotion.Update()
+    }else{
+      tg.explode = true
+    }
+    return
+  }
   tg.throw()
 }
 
@@ -110,6 +132,12 @@ func (tg *ThrowGrenade) rotateImage(iopt *ebiten.DrawImageOptions) float64 {
 }
 
 func (tg *ThrowGrenade) Draw(screen *ebiten.Image) {
+  if tg.exploding {
+    if tg.explotion != nil && !tg.explotion.IsDown(){
+      tg.explotion.Draw(screen)
+    }
+    return
+  }
   iopt := new(ebiten.DrawImageOptions) 
   var xoffsite float64
   xoffsite = tg.rotateImage(iopt)
