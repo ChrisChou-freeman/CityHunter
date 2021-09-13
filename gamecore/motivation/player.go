@@ -20,6 +20,7 @@ type Player struct {
 	jump             *texture.AnimationSprite
 	fulling          *texture.AnimationSprite
 	currentAnimation *texture.AnimationSprite
+	shootFire        *texture.AnimationSprite
 	position         *image.Point
 	vector           *image.Point
 	levelData        *tool.LevelData
@@ -37,7 +38,7 @@ type Player struct {
 	characterColor   string
 	bulletList       []*texture.MotivationSprite
 	bulletTexture    *ebiten.Image
-  throwGrenade     *ThrowGrenade
+	throwGrenade     *ThrowGrenade
 }
 
 func NewPlayer(position *image.Point, levelData *tool.LevelData) *Player {
@@ -65,33 +66,40 @@ func (p *Player) loadAnimation() error {
 	if err != nil {
 		return err
 	}
-	p.idle = texture.NewAnimationSprite(idleT, 28, 36)
+	p.idle = texture.NewAnimationSprite(idleT, 28, 36, 6)
 
 	deathT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/death.png", p.characterColor))
 	if err != nil {
 		return err
 	}
-	p.death = texture.NewAnimationSprite(deathT, 35, 36)
+	p.death = texture.NewAnimationSprite(deathT, 35, 36, 6)
 
 	jumpT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/jump.png", p.characterColor))
 	if err != nil {
 		return err
 	}
-	p.jump = texture.NewAnimationSprite(jumpT, 28, 36)
+	p.jump = texture.NewAnimationSprite(jumpT, 28, 36, 6)
 
 	runT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/run.png", p.characterColor))
 	if err != nil {
 		return err
 	}
-	p.run = texture.NewAnimationSprite(runT, 28, 36)
+	p.run = texture.NewAnimationSprite(runT, 28, 36, 6)
 
 	fullingT, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("content/player/%v/full.png", p.characterColor))
 	if err != nil {
 		return err
 	}
-	p.fulling = texture.NewAnimationSprite(fullingT, 28, 36)
+	p.fulling = texture.NewAnimationSprite(fullingT, 28, 36, 6)
 
-	bulletT, _, err := ebitenutil.NewImageFromFile("content/items/bullet.png")
+	shootFireT, _, err := ebitenutil.NewImageFromFile("content/vex/shootfire.png")
+	if err != nil {
+		return err
+	}
+	p.shootFire = texture.NewAnimationSprite(shootFireT, 7, 7, 1)
+
+	bulletT := ebiten.NewImage(3, 3)
+	bulletT.Fill(tool.COLOR_GREY)
 	if err != nil {
 		return nil
 	}
@@ -150,9 +158,9 @@ func (p *Player) keyEvent() {
 		p.shootBullet()
 	}
 
-  if p.keymap.IsKeyThrowPressed() {
-    p.throwGrenade = NewThrowGrenade(p.position, p.levelData, p.flip)
-  }
+	if p.keymap.IsKeyThrowPressed() {
+		p.throwGrenade = NewThrowGrenade(p.position, p.levelData, p.flip)
+	}
 }
 
 func (p *Player) vectorHandle() {
@@ -160,12 +168,12 @@ func (p *Player) vectorHandle() {
 		return
 	}
 	tool.CollisionDetect(
-    p.currentAnimation.GetRec(),
-    p.levelData,
-    p.vector,
-    p.position,
-    false,
-  )
+		p.currentAnimation.GetRec(),
+		p.levelData,
+		p.vector,
+		p.position,
+		false,
+	)
 	if p.vector.Y == 0 {
 		p.isFulling = false
 	}
@@ -208,20 +216,21 @@ func (p *Player) animationControl() {
 }
 
 func (p *Player) shootBullet() {
+	p.shootFire.PlayOnce()
 	var bulletVectory *image.Point
 	var bulletPosition *tool.FPoint
 	if p.flip {
 		bulletVectory = &image.Point{X: -p.bulletSpeed}
 		bulletPosition = &tool.FPoint{
-      X: float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx()),
-      Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
-    }
+			X: float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx()),
+			Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
+		}
 	} else {
 		bulletVectory = &image.Point{X: p.bulletSpeed}
 		bulletPosition = &tool.FPoint{
-      X: float64(p.position.X + p.idle.GetRec().Dx()),
-      Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
-    }
+			X: float64(p.position.X + p.idle.GetRec().Dx()),
+			Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
+		}
 	}
 	newSprite := &texture.Sprite{
 		Texture:  p.bulletTexture,
@@ -231,19 +240,36 @@ func (p *Player) shootBullet() {
 	p.bulletList = append(p.bulletList, newBullet)
 }
 
+func (p *Player) updateShootFire() {
+	p.shootFire.Flip = p.flip
+	var firePx int
+	var firePy int
+	firePx = p.idle.GetRec().Max.X
+	firePy = p.position.Y + p.idle.GetRec().Dy()/2 - 3
+	if p.flip {
+		firePx = p.idle.GetRec().Min.X - p.shootFire.GetRec().Dx()
+		firePy = p.position.Y + p.idle.GetRec().Dy()/2 - 3
+	}
+	// fix fire effect position
+	if p.currentAnimation == p.run || p.currentAnimation == p.jump {
+		firePy -= 2
+	}
+	p.shootFire.Update(&image.Point{X: firePx, Y: firePy})
+}
+
 func (p *Player) updateBullet() {
 	deadBulletIndex := []int{}
 	for index, bullet := range p.bulletList {
 		tool.CollisionDetect(
-      bullet.GetRec(),
-      p.levelData,
-      bullet.Vector,
-      &image.Point{
-        int(bullet.Position.X),
-        int(bullet.Position.Y),
-      },
-      false,
-    )
+			bullet.GetRec(),
+			p.levelData,
+			bullet.Vector,
+			&image.Point{
+				int(bullet.Position.X),
+				int(bullet.Position.Y),
+			},
+			false,
+		)
 		bullet.Update()
 		if !bullet.Islife() {
 			deadBulletIndex = append(deadBulletIndex, index)
@@ -269,9 +295,10 @@ func (p *Player) Update() {
 	p.animationControl()
 	p.currentAnimation.Update(p.position)
 	p.updateBullet()
-  if p.throwGrenade != nil{
-    p.throwGrenade.Update()
-  }
+	p.updateShootFire()
+	if p.throwGrenade != nil {
+		p.throwGrenade.Update()
+	}
 }
 
 func (p *Player) DrawBullet(screen *ebiten.Image) {
@@ -283,12 +310,19 @@ func (p *Player) DrawBullet(screen *ebiten.Image) {
 	}
 }
 
+func (p *Player) DrawShootFire(screen *ebiten.Image) {
+	if len(p.bulletList) > 0 {
+		p.shootFire.Draw(screen)
+	}
+}
+
 func (p *Player) Draw(screen *ebiten.Image) {
 	p.currentAnimation.Draw(screen)
 	p.DrawBullet(screen)
-  if p.throwGrenade != nil{
-    p.throwGrenade.Draw(screen)
-  }
+	p.DrawShootFire(screen)
+	if p.throwGrenade != nil {
+		p.throwGrenade.Draw(screen)
+	}
 }
 
 func (p *Player) Dispose() {

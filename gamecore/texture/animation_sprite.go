@@ -15,23 +15,24 @@ type AnimationSprite struct {
 	framHeight       int
 	currentFrame     int
 	count            int
+	framSpeedDelay   int
 	loop             bool
 	AnimationPlayEnd bool
 	Flip             bool
 }
 
-func NewAnimationSprite(texture *ebiten.Image, framWidth int, framHeight int) *AnimationSprite {
+func NewAnimationSprite(texture *ebiten.Image, framWidth int, framHeight int, framSpeedDelay int) *AnimationSprite {
 	as := new(AnimationSprite)
-	as.init(texture, framWidth, framHeight)
+	as.init(texture, framWidth, framHeight, framSpeedDelay)
 	return as
 }
 
-func (as *AnimationSprite) init(texture *ebiten.Image, framWidth int, framHeight int) {
+func (as *AnimationSprite) init(texture *ebiten.Image, framWidth int, framHeight int, framSpeedDelay int) {
 	as.texture = texture
 	as.framWidth = framWidth
 	as.framHeight = framHeight
-	textureWidth, _ := texture.Size()
-	as.framNum = textureWidth / framWidth
+	as.framSpeedDelay = 6
+	as.framNum = texture.Bounds().Dx() / framWidth
 }
 
 func (as *AnimationSprite) GetRec() image.Rectangle {
@@ -67,6 +68,9 @@ func (as *AnimationSprite) Update(position *image.Point) {
 }
 
 func (as *AnimationSprite) Draw(screen *ebiten.Image) {
+	if as.position == nil {
+		return
+	}
 	iop := new(ebiten.DrawImageOptions)
 	drawPositonX := as.position.X
 	if as.Flip {

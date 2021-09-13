@@ -1,4 +1,3 @@
 package motivation
 
-type MotivationCharacter struct {}
-
+type MotivationCharacter struct{}
