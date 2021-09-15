@@ -49,7 +49,7 @@ func (ms *MotivationSprite) Kill() {
 }
 
 func (ms *MotivationSprite) Draw(screen *ebiten.Image) {
-	if !ms.endLife {
+	if ms.Islife() {
 		ms.Sprite.Draw(screen)
 	}
 }

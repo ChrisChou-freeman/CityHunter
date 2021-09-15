@@ -31,7 +31,7 @@ func (as *AnimationSprite) init(texture *ebiten.Image, framWidth int, framHeight
 	as.texture = texture
 	as.framWidth = framWidth
 	as.framHeight = framHeight
-	as.framSpeedDelay = 6
+	as.framSpeedDelay = framSpeedDelay
 	as.framNum = texture.Bounds().Dx() / framWidth
 }
 
@@ -53,6 +53,10 @@ func (as *AnimationSprite) PlayOnce() {
 	as.count = 0
 }
 
+func (as *AnimationSprite) Stop() {
+	as.loop = false
+}
+
 func (as *AnimationSprite) Update(position *image.Point) {
 	as.position = position
 	if as.loop {
@@ -64,7 +68,7 @@ func (as *AnimationSprite) Update(position *image.Point) {
 			as.AnimationPlayEnd = true
 		}
 	}
-	as.currentFrame = (as.count / 6) % as.framNum
+	as.currentFrame = (as.count / as.framSpeedDelay) % as.framNum
 }
 
 func (as *AnimationSprite) Draw(screen *ebiten.Image) {

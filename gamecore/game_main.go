@@ -37,7 +37,8 @@ func (g *GameMain) init() {
 		{X: 0, Y: 250},
 		{X: 0, Y: 0},
 		{X: 0, Y: 0},
-		{X: 0, Y: 0}}
+		{X: 0, Y: 0},
+	}
 	g.LoadContent()
 	g.keyMap = new(input.KeyMap)
 }

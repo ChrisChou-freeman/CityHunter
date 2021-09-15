@@ -52,7 +52,7 @@ func (p *Player) init(position *image.Point, levelData *tool.LevelData) {
 	p.gravity = 6
 	p.speed = 2
 	p.jumpForce = 60
-	p.bulletSpeed = 6
+	p.bulletSpeed = 15
 	p.vector = &image.Point{}
 	p.action = "idle"
 	p.levelData = levelData
@@ -96,10 +96,10 @@ func (p *Player) loadAnimation() error {
 	if err != nil {
 		return err
 	}
-	p.shootFire = texture.NewAnimationSprite(shootFireT, 7, 7, 1)
+	p.shootFire = texture.NewAnimationSprite(shootFireT, 7, 7, 3)
 
-	bulletT := ebiten.NewImage(3, 3)
-	bulletT.Fill(tool.COLOR_GREY)
+	bulletT := ebiten.NewImage(9, 3)
+	bulletT.Fill(tool.COLOR_BULLET)
 	if err != nil {
 		return nil
 	}
@@ -215,29 +215,53 @@ func (p *Player) animationControl() {
 	p.currentAnimation.Flip = p.flip
 }
 
+func (p *Player) makeBulletTracer(bulletPosition *tool.FPoint, bulletVectory *image.Point) {
+	tracerLen := 16
+	count := 0
+	for i := tracerLen; i > 0; i-- {
+		if i%2 == 0 {
+			continue
+		}
+		bTexture := p.bulletTexture
+		if i != tracerLen-1 {
+			bTexture = ebiten.NewImage(3, 3)
+			bTextureColor := tool.COLOR_BULLET_TRACER
+			bTextureColor.A -= uint8(count) * 35
+			count++
+			// fmt.Println(bTextureColor)
+			bTexture.Fill(bTextureColor)
+		}
+		newBulletPosition := *bulletPosition
+		if p.flip {
+			newBulletPosition.X -= float64(i * (p.bulletTexture.Bounds().Dx() - 3))
+		} else {
+			newBulletPosition.X += float64(i * (p.bulletTexture.Bounds().Dx() - 3))
+		}
+		newSprite := &texture.Sprite{
+			Texture:  bTexture,
+			Position: &newBulletPosition,
+		}
+		newBullet := texture.NewMotivationSprite(newSprite, 120, bulletVectory)
+		p.bulletList = append(p.bulletList, newBullet)
+	}
+}
+
 func (p *Player) shootBullet() {
 	p.shootFire.PlayOnce()
-	var bulletVectory *image.Point
-	var bulletPosition *tool.FPoint
+	bulletVectory := &image.Point{X: p.bulletSpeed}
+	bulletPosition := &tool.FPoint{
+		X: float64(p.position.X + p.idle.GetRec().Dx()),
+		Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 1),
+	}
 	if p.flip {
-		bulletVectory = &image.Point{X: -p.bulletSpeed}
-		bulletPosition = &tool.FPoint{
-			X: float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx()),
-			Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
-		}
-	} else {
-		bulletVectory = &image.Point{X: p.bulletSpeed}
-		bulletPosition = &tool.FPoint{
-			X: float64(p.position.X + p.idle.GetRec().Dx()),
-			Y: float64(p.position.Y + p.idle.GetRec().Dy()/2 - 2),
-		}
+		bulletVectory.X *= -1
+		bulletPosition.X = float64(p.position.X) - float64(p.bulletTexture.Bounds().Dx())
 	}
-	newSprite := &texture.Sprite{
-		Texture:  p.bulletTexture,
-		Position: bulletPosition,
+	// fix fire effect diffrent animation position
+	if p.currentAnimation == p.run || p.currentAnimation == p.jump {
+		bulletPosition.Y -= 1
 	}
-	newBullet := texture.NewMotivationSprite(newSprite, 120, bulletVectory)
-	p.bulletList = append(p.bulletList, newBullet)
+	p.makeBulletTracer(bulletPosition, bulletVectory)
 }
 
 func (p *Player) updateShootFire() {
@@ -250,7 +274,7 @@ func (p *Player) updateShootFire() {
 		firePx = p.idle.GetRec().Min.X - p.shootFire.GetRec().Dx()
 		firePy = p.position.Y + p.idle.GetRec().Dy()/2 - 3
 	}
-	// fix fire effect position
+	// fix fire effect diffrent animation position
 	if p.currentAnimation == p.run || p.currentAnimation == p.jump {
 		firePy -= 2
 	}
